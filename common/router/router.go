@@ -11,7 +11,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 
 	hg := g.Group("/check")
 	{
-		hg.GET("/health", health.HealthCheck)
+		hg.GET("/health", health.Check)
 	}
 	return g
 }
