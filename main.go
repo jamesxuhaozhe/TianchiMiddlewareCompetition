@@ -3,9 +3,9 @@ package main
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/common/conf"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/common/constants"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/common/router"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/router"
 	"github.com/spf13/pflag"
 	"log"
 	"net/http"
@@ -41,7 +41,7 @@ func main() {
 	}()
 
 	log.Printf("Start to listening the incoming requests on http address: %s",
-		constants.CommonUrlPrefix + conf.GetPort())
+		constants.CommonUrlPrefix+ conf.GetPort())
 	log.Fatal(http.ListenAndServe(":" + conf.GetPort(), g).Error())
 }
 

@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/common/conf"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/common/constants"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 )
 
 func IsClientProcess() bool {
