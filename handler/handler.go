@@ -25,9 +25,9 @@ func SetParameter(c *gin.Context)  {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	log.Printf("data source port is %s", r.Dataport)
+	log.Printf("data source port is %s", r.DatasourcePort)
 
 	// set the datasource port
-	conf.SetDatasourcePort(r.Dataport)
+	conf.SetDatasourcePort(r.DatasourcePort)
 	c.String(http.StatusOK, "suc")
 }
