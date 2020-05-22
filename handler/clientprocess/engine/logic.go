@@ -27,8 +27,6 @@ func ProcessData() error {
 	for {
 		count++
 		line, err := buf.ReadString('\n')
-		//line = strings.TrimSpace(line)
-		//fmt.Printf("Line %s, %s", strconv.Itoa(count), line)
 		cols := strings.Split(line, "|")
 		fmt.Printf("Line number: %s, Col length: %s \n", strconv.Itoa(count), strconv.Itoa(len(cols)))
 		if err != nil {
