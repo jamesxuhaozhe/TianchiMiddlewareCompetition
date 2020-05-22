@@ -20,10 +20,11 @@ func ProcessData() error {
 		return err
 	}
 	defer resp.Body.Close()
-	buf := bufio.NewReader(resp.Body)
-	count := 0
 
 	fmt.Printf("Start download from url: %s\n", url)
+
+	buf := bufio.NewReader(resp.Body)
+	count := 0
 	for {
 		count++
 		line, err := buf.ReadString('\n')
