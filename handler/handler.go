@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"log"
 	"net/http"
 )
@@ -24,5 +25,8 @@ func SetParameter(c *gin.Context)  {
 		return
 	}
 	log.Printf("data source port is %s", r.Dataport)
+
+	// set the datasource port
+	conf.SetDatasourcePort(r.Dataport)
 	c.String(http.StatusOK, "suc")
 }

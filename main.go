@@ -19,8 +19,8 @@ var (
 func main() {
 	pflag.Parse()
 
-	// Init the conf
-	conf.Init(*cfg)
+	// SetSeverPort the conf
+	conf.SetSeverPort(*cfg)
 
 	// Set gin mode.
 	gin.SetMode("debug")
