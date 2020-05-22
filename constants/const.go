@@ -10,5 +10,6 @@ var (
 
 	BackendProcessPort1 = "8002"
 
+	// max amount of ping times during Bootstrap
 	PingCount = 5
 )
