@@ -10,7 +10,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	g.Use(mw...)
 
 	g.HEAD("/ready", handler.Ready)
-	g.POST("/setParameter", handler.SetParameter)
+	g.GET("/setParameter", handler.SetParameter)
 
 	hg := g.Group("/check")
 	{
