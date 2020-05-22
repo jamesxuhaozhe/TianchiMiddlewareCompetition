@@ -7,17 +7,18 @@ import (
 	"net/http"
 )
 
-// HealthCheck shows `OK` as the ping-pong result
+// HealthCheck shows `OK` as the ping-pong result.
 func Check(c *gin.Context) {
 	message := "OK"
 	c.String(http.StatusOK, "\n"+message)
 }
 
-
+// Ready signals the remote data source that the server is ready.
 func Ready(c *gin.Context) {
 	c.String(http.StatusOK, "suc")
 }
 
+// setParameter notifies server what the remote data source port is.
 func SetParameter(c *gin.Context)  {
 	var r SetParameterReq
 	if err := c.Bind(&r); err != nil {
