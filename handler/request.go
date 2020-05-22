@@ -1,5 +1,5 @@
 package handler
 
 type SetParameterReq struct {
-	DatasourcePort string `json:"dataport"`
+	DatasourcePort string `json:"port"`
 }
