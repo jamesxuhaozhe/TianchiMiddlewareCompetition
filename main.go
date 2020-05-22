@@ -41,8 +41,8 @@ func main() {
 	}()
 
 	log.Printf("Start to listening the incoming requests on http address: %s\n",
-		constants.CommonUrlPrefix+ conf.GetServerPort())
-	log.Fatal(http.ListenAndServe(":" + conf.GetServerPort(), g).Error())
+		constants.CommonUrlPrefix+conf.GetServerPort())
+	log.Fatal(http.ListenAndServe(":"+conf.GetServerPort(), g).Error())
 }
 
 func pingServer() error {

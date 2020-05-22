@@ -22,7 +22,7 @@ func Ready(c *gin.Context) {
 }
 
 // setParameter notifies server what the remote data source port is.
-func SetParameter(c *gin.Context)  {
+func SetParameter(c *gin.Context) {
 	var r SetParameterReq
 	if err := c.Bind(&r); err != nil {
 		c.String(http.StatusBadRequest, "fail")
