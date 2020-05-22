@@ -6,12 +6,12 @@ var serverPort = "8080"
 var datasourcePort = ""
 
 // SetServerPort sets the current port of the server
-func SetSeverPort(port string) {
+func SetServerPort(port string) {
 	serverPort = port
 }
 
-// GetPort gets the current port of the server
-func GetPort() string {
+// GetServerPort gets the current port of the server
+func GetServerPort() string {
 	return serverPort
 }
 

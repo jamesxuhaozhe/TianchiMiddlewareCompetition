@@ -6,7 +6,7 @@ import (
 )
 
 func IsClientProcess() bool {
-	serverPort := conf.GetPort()
+	serverPort := conf.GetServerPort()
 	if serverPort == constants.ClientProcessPort1 || serverPort == constants.ClientProcessPort2 {
 		return true
 	}
@@ -14,7 +14,7 @@ func IsClientProcess() bool {
 }
 
 func IsBackendProcess() bool {
-	serverPort := conf.GetPort()
+	serverPort := conf.GetServerPort()
 	if serverPort == constants.BackendProcessPort1 {
 		return true
 	}

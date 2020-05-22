@@ -19,8 +19,8 @@ var (
 func main() {
 	pflag.Parse()
 
-	// SetSeverPort the conf
-	conf.SetSeverPort(*cfg)
+	// SetServerPort the conf
+	conf.SetServerPort(*cfg)
 
 	// Set gin mode.
 	gin.SetMode("debug")
@@ -29,7 +29,7 @@ func main() {
 	g := gin.New()
 
 	// routes
-	// TODO need to add more handler based on the process type
+	// TODO need to add more engine based on the process type
 	router.Load(g)
 
 	// Ping the server to make sure the router is working
@@ -40,15 +40,15 @@ func main() {
 		log.Println("The router has been deployed successfully.")
 	}()
 
-	log.Printf("Start to listening the incoming requests on http address: %s",
-		constants.CommonUrlPrefix+ conf.GetPort())
-	log.Fatal(http.ListenAndServe(":" + conf.GetPort(), g).Error())
+	log.Printf("Start to listening the incoming requests on http address: %s\n",
+		constants.CommonUrlPrefix+ conf.GetServerPort())
+	log.Fatal(http.ListenAndServe(":" + conf.GetServerPort(), g).Error())
 }
 
 func pingServer() error {
 
 	for i := 0; i < constants.PingCount; i++ {
-		resp, err := http.Get("http://" + constants.CommonUrlPrefix + conf.GetPort() + "/check/health")
+		resp, err := http.Get("http://" + constants.CommonUrlPrefix + conf.GetServerPort() + "/check/health")
 		if err == nil && resp.StatusCode == 200 {
 			return nil
 		}
