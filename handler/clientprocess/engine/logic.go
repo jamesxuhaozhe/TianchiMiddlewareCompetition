@@ -32,8 +32,10 @@ func ProcessData() error {
 		fmt.Printf("Line number: %s, Col length: %s \n", strconv.Itoa(count), strconv.Itoa(len(cols)))
 		if err != nil {
 			if err == io.EOF {
+				fmt.Println("THIS MARKS THE END OF FILE.")
 				return nil
 			}
+			fmt.Println("SOME OF UNKNOWN ERR.")
 			return err
 		}
 	}
