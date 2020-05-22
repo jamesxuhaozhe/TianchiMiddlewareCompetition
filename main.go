@@ -13,17 +13,18 @@ import (
 )
 
 var (
-	cfg = pflag.StringP("port", "p", "8080", "server port")
+	port = pflag.StringP("port", "p", "8080", "server port")
+	mode = pflag.StringP("mode", "m", "debug", "server mode: debug or release")
 )
 
 func main() {
 	pflag.Parse()
 
 	// SetServerPort the conf
-	conf.SetServerPort(*cfg)
+	conf.SetServerPort(*port)
 
 	// Set gin mode.
-	gin.SetMode("debug")
+	gin.SetMode(*mode)
 
 	// create gin engine
 	g := gin.New()
