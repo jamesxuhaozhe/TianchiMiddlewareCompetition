@@ -1,6 +1,6 @@
 package constants
 
-var (
+const (
 	// defines the common url end point prefix.
 	CommonUrlPrefix = "localhost:"
 
@@ -12,4 +12,6 @@ var (
 
 	// max amount of ping times during Bootstrap
 	PingCount = 5
+
+	BatchSize = 20000
 )

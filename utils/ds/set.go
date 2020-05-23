@@ -6,12 +6,16 @@ type StrSet struct {
 	cap int
 }
 
-// NewStrSet creates an instance of StrSet.
-func NewStrSet(cap int) *StrSet {
+// NewStrSetWithCap creates an instance of StrSet.
+func NewStrSetWithCap(cap int) *StrSet {
 	return &StrSet{
 		set: make(map[string]bool, cap),
 		cap: cap,
 	}
+}
+
+func NewStrSet() *StrSet {
+	return NewStrSetWithCap(1)
 }
 
 // Add adds an element to the set, return false if the element already exists in the set,

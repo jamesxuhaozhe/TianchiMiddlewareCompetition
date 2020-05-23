@@ -23,18 +23,19 @@ func Ready(c *gin.Context) {
 
 // setParameter notifies server what the remote data source port is.
 func SetParameter(c *gin.Context) {
-	var r SetParameterReq
-	if err := c.Bind(&r); err != nil {
+	port := c.Query("port")
+	if port == "" {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	log.Printf("data source port is %s\n", r.DatasourcePort)
+	log.Printf("data source port is %s\n", port)
 
 	// set the datasource port
-	conf.SetDatasourcePort(r.DatasourcePort)
+	conf.SetDatasourcePort(port)
 
 	if utils.IsClientProcess() {
 		fmt.Println("Client process starts processing data...")
+		engine.Init()
 		go engine.ProcessData()
 	}
 	c.String(http.StatusOK, "suc")
