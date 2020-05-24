@@ -18,7 +18,7 @@ const (
 
 var (
 	batchTraceList = make([]*ds.ConcurMap, 0, batchCount)
-	initDone = make(chan struct{}, 1)
+	initDone       = make(chan struct{}, 1)
 )
 
 // Init populates the data structure we need for further processing.
@@ -73,7 +73,7 @@ func ProcessData() error {
 				}
 			}
 		}
-		if count % constants.BatchSize == 0 {
+		if count%constants.BatchSize == 0 {
 			pos++
 			if pos >= batchCount {
 				pos = 0

@@ -4,9 +4,9 @@ import "sync"
 
 // ConcurMap is a customized map that supports concurrent read and write.
 type ConcurMap struct {
-	cap int
+	cap   int
 	rwMap map[string]*[]string
-	mu *sync.RWMutex
+	mu    *sync.RWMutex
 }
 
 // NewConcurMap returns a pointer of type ConcurMap.
@@ -49,4 +49,3 @@ func (m *ConcurMap) Clear() {
 	defer m.mu.Unlock()
 	m.rwMap = make(map[string]*[]string, m.cap)
 }
-
