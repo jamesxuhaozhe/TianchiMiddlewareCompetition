@@ -1,5 +1,7 @@
 package ds
 
+import "encoding/json"
+
 // StrSet is a customized data structure to hold a set of string.
 type StrSet struct {
 	set map[string]bool
@@ -41,4 +43,25 @@ func (s *StrSet) Clear() {
 // Size returns number of the elements in the set.
 func (s *StrSet) Size() int {
 	return len(s.set)
+}
+
+func (s *StrSet) ToJSON() string {
+	tempKeys := make([]string, 0, len(s.set))
+	for k, _ := range s.set {
+		tempKeys = append(tempKeys, k)
+	}
+	b, err := json.MarshalIndent(tempKeys, "", "  ")
+	if err != nil {
+		return ""
+	} else {
+		return string(b)
+	}
+}
+
+func (s *StrSet) GetStrSlice() []string {
+	tempKeys := make([]string, 0, len(s.set))
+	for k, _ := range s.set {
+		tempKeys = append(tempKeys, k)
+	}
+	return tempKeys
 }

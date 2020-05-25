@@ -2,6 +2,8 @@ package engine
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
@@ -24,11 +26,13 @@ var (
 // Init populates the data structure we need for further processing.
 func Init() {
 	go func() {
-		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n", len(batchTraceList), cap(batchTraceList))
+		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n",
+			len(batchTraceList), cap(batchTraceList))
 		for i := 0; i < batchCount; i++ {
 			batchTraceList = append(batchTraceList, ds.NewConcurMap(constants.BatchSize))
 		}
-		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n", len(batchTraceList), cap(batchTraceList))
+		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n",
+			len(batchTraceList), cap(batchTraceList))
 		initDone <- struct{}{}
 	}()
 }
@@ -79,7 +83,10 @@ func ProcessData() error {
 				pos = 0
 			}
 			traceBatchMap = batchTraceList[pos]
-			fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d\n", traceBatchMap.Size(), badTraceIdSet.Size(), count)
+			badTraceIdSetBatchPos := count/constants.BatchSize - 1
+			fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d, badTraceSet: %s\n",
+				traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos, badTraceIdSet.ToJSON())
+			sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
 			badTraceIdSet.Clear()
 		}
 		if err != nil {
@@ -94,8 +101,22 @@ func ProcessData() error {
 	return nil
 }
 
+func sendBadTraceIds(traceIds []string, batchPos int) {
+	client := &http.Client{}
+	data := make(map[string]interface{})
+	data["ids"] = traceIds
+	data["batchPos"] = batchPos
+	bytesData, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Printf("request body: %s\n", string(bytesData))
+	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
+		"/setBadTraceIds", bytes.NewReader(bytesData))
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+}
+
 // isBadSpan checks if the given tag belongs to a bad span.
-// a bad span is defined as whose tags contains 'error=1' or 'http.status_code=200'
+// a bad span is defined as whose tags contains 'error=1' or 'http.status_code!=200'
 func isBadSpan(tag *string) bool {
 	if strings.Contains(*tag, "error=1") {
 		return true
