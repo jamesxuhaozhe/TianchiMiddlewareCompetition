@@ -1,8 +1,8 @@
 package backendprocess
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess/engine"
 	"net/http"
 )
 
@@ -17,10 +17,6 @@ func SetBadTraceIds(c *gin.Context) {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	fmt.Printf("%v\n", req)
-	for _, id := range req.Ids {
-		fmt.Printf("id: %s ", id)
-	}
-	fmt.Println()
+	go engine.SetBadTraceIds(req.Ids, req.BatchPos)
 	c.String(http.StatusOK, "suc")
 }

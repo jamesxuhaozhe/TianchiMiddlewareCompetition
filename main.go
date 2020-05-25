@@ -5,7 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
+	backend "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess/engine"
+	client "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/clientprocess/engine"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/router"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 	"github.com/spf13/pflag"
 	"log"
 	"net/http"
@@ -32,6 +35,14 @@ func main() {
 	// routes
 	// TODO need to add more engine based on the process type
 	router.Load(g)
+
+	// client or backend process data structure init
+	if utils.IsBackendProcess() {
+		backend.Init()
+		// init checksum goroutine
+	} else if utils.IsClientProcess() {
+		client.Init()
+	}
 
 	// Ping the server to make sure the router is working
 	go func() {

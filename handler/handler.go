@@ -35,7 +35,6 @@ func SetParameter(c *gin.Context) {
 
 	if utils.IsClientProcess() {
 		fmt.Println("Client process starts processing data...")
-		engine.Init()
 		go engine.ProcessData()
 	}
 	c.String(http.StatusOK, "suc")

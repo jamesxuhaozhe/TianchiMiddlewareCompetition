@@ -26,8 +26,6 @@ var (
 // Init populates the data structure we need for further processing.
 func Init() {
 	go func() {
-		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n",
-			len(batchTraceList), cap(batchTraceList))
 		for i := 0; i < batchCount; i++ {
 			batchTraceList = append(batchTraceList, ds.NewConcurMap(constants.BatchSize))
 		}

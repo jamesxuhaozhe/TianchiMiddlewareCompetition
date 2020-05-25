@@ -14,4 +14,7 @@ const (
 	PingCount = 5
 
 	BatchSize = 20000
+
+	// Ideally when two clients both finish, the process count should be 2
+	ExpectedProcessCount = 2
 )
