@@ -99,8 +99,8 @@ func ProcessData() error {
 func isBadSpan(tag *string) bool {
 	if strings.Contains(*tag, "error=1") {
 		return true
-	} else if strings.Contains(*tag, "http.status_code=200") {
-		return false
+	} else if strings.Contains(*tag, "http.status_code=") && !strings.Contains(*tag, "http.status_code=200") {
+		return true
 	}
 	return false
 }
