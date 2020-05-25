@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-type SetBadTraceIdsReq struct {
+type setBadTraceIdsReq struct {
 	Ids      []string `json:"ids"`
 	BatchPos int      `json:"batchPos"`
 }
 
 func SetBadTraceIds(c *gin.Context) {
-	var req SetBadTraceIdsReq
+	var req setBadTraceIdsReq
 	if err := c.Bind(&req); err != nil {
 		c.String(http.StatusBadRequest, "fail")
 		return
