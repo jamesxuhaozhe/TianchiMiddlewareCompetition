@@ -17,6 +17,9 @@ var (
 
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
 	initDone        = make(chan struct{}, 1)
+
+	currentBatch = 0
+	availableBatch = make(chan *BadTraceIdsBatch)
 )
 
 type BadTraceIdsBatch struct {
@@ -33,6 +36,33 @@ func Init() {
 		initDone <- struct{}{}
 	}()
 
+	go func() {
+		for {
+			nextBatch := currentBatch + 1
+			if nextBatch >= batchSize {
+				nextBatch = 0
+			}
+
+			nextBadTraceIdsBatch := badTraceIdsList[nextBatch]
+			currentBadTraceIdsBatch := badTraceIdsList[currentBatch]
+			if (finishProcessCount >= constants.ExpectedProcessCount && currentBadTraceIdsBatch.batchPos > 0) ||
+				(currentBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount &&
+					nextBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount) {
+				badTraceIdsList[currentBatch] = &BadTraceIdsBatch{}
+				currentBatch = nextBatch
+				availableBatch <- currentBadTraceIdsBatch
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			for batch := range availableBatch {
+				fmt.Printf("batchPos: %d, processCount: %d, ids: %s", batch.batchPos, batch.processCount, batch.badTraceIds)
+			}
+		}
+	}()
+
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.
@@ -42,11 +72,11 @@ func SetBadTraceIds(badTraceIds []string, batchPos int) {
 	if len(badTraceIds) > 0 {
 		batch.batchPos = batchPos
 		batch.processCount++
-		before := len(batch.badTraceIds)
+		//before := len(batch.badTraceIds)
 		batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
-		after := len(batch.badTraceIds)
-		fmt.Printf("Add ids len is: %d, BatchPos: %d, pos: %d, bad ids before is: %d, after ids after is %d\n",
-			len(badTraceIds), batchPos, pos, before, after)
+		//after := len(batch.badTraceIds)
+/*		fmt.Printf("Add ids len is: %d, BatchPos: %d, pos: %d, bad ids before is: %d, after ids after is %d\n",
+			len(badTraceIds), batchPos, pos, before, after)*/
 	}
 }
 
