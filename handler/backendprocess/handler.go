@@ -17,6 +17,11 @@ func SetBadTraceIds(c *gin.Context) {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	go engine.SetBadTraceIds(req.Ids, req.BatchPos)
+	engine.SetBadTraceIds(req.Ids, req.BatchPos)
+	c.String(http.StatusOK, "suc")
+}
+
+func MarkFinish(c *gin.Context) {
+	engine.BumpProcessCount()
 	c.String(http.StatusOK, "suc")
 }

@@ -16,6 +16,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 
 	if utils.IsBackendProcess() {
 		g.POST("/setBadTraceIds", backendprocess.SetBadTraceIds)
+		g.GET("/markFinish", backendprocess.MarkFinish)
 	}
 
 	hg := g.Group("/check")
