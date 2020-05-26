@@ -39,7 +39,24 @@ func Init() {
 	}()
 
 	go func() {
+		stop := false
+		count := 0
 		for {
+			select {
+			case <-backendDone:
+				//fmt.Println("backendDone receive22222222222222222222222")
+				stop = true
+				//fmt.Println("333333333333333333333333333333333333333")
+			default:
+				// do nothing
+				//fmt.Println("goroutine: do nothing")
+			}
+			if stop {
+				break
+			}
+
+			count++
+			//fmt.Printf("current loop count: %d\n", count)
 			nextBatch := currentBatch + 1
 			if nextBatch >= batchSize {
 				nextBatch = 0
@@ -52,19 +69,16 @@ func Init() {
 					nextBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount) {
 				badTraceIdsList[currentBatch] = &BadTraceIdsBatch{}
 				currentBatch = nextBatch
+				fmt.Printf("Sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
 				availableBatch <- currentBadTraceIdsBatch
-			}
-
-			select {
-			case <-backendDone:
-				break
-			default:
-				// do nothing
+				fmt.Printf("finish sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
 			}
 		}
+		fmt.Println("exiting the second goroutine!")
 	}()
 
 	go func() {
+		stop := false
 		for {
 			select {
 			// if we manage get one available batch from the channel
@@ -73,20 +87,26 @@ func Init() {
 			default:
 				if IsFinished() {
 					sendCheckSum()
+					backendDone <- struct{}{}
+					//stop = true
 				}
 			}
+			if stop {
+				break
+			}
 		}
+		fmt.Println("exiting the third goroutine!")
 	}()
 
 }
 
 // sendCheckSum computes the desired MD5 checksum results and send it to the data source
 func sendCheckSum() {
-
+	fmt.Println("11111111111")
 }
 
 func process(batch *BadTraceIdsBatch) {
-
+	fmt.Printf("processing batchPos: %d\n", batch.batchPos)
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.
