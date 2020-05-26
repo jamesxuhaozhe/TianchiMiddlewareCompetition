@@ -16,13 +16,10 @@ var (
 	finishProcessCount int8
 
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
-	initDone        = make(chan struct{}, 1)
+	initDone        = make(chan struct{})
 
 	currentBatch   = 0
 	availableBatch = make(chan *BadTraceIdsBatch)
-
-	backendDone = make(chan struct{}, 1)
-	isFinished = make(chan struct{})
 )
 
 type BadTraceIdsBatch struct {
@@ -40,24 +37,10 @@ func Init() {
 	}()
 
 	go func() {
-		stop := false
+		<-initDone
 		count := 0
 		for {
-			select {
-			case <-backendDone:
-				//fmt.Println("backendDone receive22222222222222222222222")
-				stop = true
-				//fmt.Println("333333333333333333333333333333333333333")
-			default:
-				// do nothing
-				//fmt.Println("goroutine: do nothing")
-			}
-			if stop {
-				break
-			}
-
 			count++
-			//fmt.Printf("current loop count: %d\n", count)
 			nextBatch := currentBatch + 1
 			if nextBatch >= batchSize {
 				nextBatch = 0
@@ -70,35 +53,24 @@ func Init() {
 					nextBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount) {
 				badTraceIdsList[currentBatch] = &BadTraceIdsBatch{}
 				currentBatch = nextBatch
-				fmt.Printf("Sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
+				//fmt.Printf("Send batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
 				availableBatch <- currentBadTraceIdsBatch
-				fmt.Printf("finish sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
+				//fmt.Printf("finish sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
+			}
+			if IsFinished() {
+				close(availableBatch)
+				break
 			}
 		}
 		fmt.Println("exiting the second goroutine!")
 	}()
 
 	go func() {
-		stop := false
-		for {
-			select {
-			// if we manage get one available batch from the channel
-			case batch := <-availableBatch:
-				process(batch)
-			case <-isFinished:
-				stop = true
-				break
-/*				if IsFinished() {
-					sendCheckSum()
-					backendDone <- struct{}{}
-					//stop = true
-				}*/
-			}
-			if stop {
-				break
-			}
+		fmt.Println("Entering second goroutine.")
+		for batch := range availableBatch {
+			process(batch)
 		}
-		fmt.Println("exiting the third goroutine!")
+		fmt.Println("Exiting second goroutine.")
 	}()
 
 }
@@ -109,7 +81,7 @@ func sendCheckSum() {
 }
 
 func process(batch *BadTraceIdsBatch) {
-	fmt.Printf("processing batchPos: %d\n", batch.batchPos)
+	//fmt.Printf("process batchPos: %d\n", batch.batchPos)
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.
@@ -136,16 +108,7 @@ func BumpProcessCount() {
 
 // StartCheckSumService starts the service computing the checksum.
 func StartCheckSumService() {
-	<-initDone
-	go func() {
-		for {
-			if IsFinished() {
-				fmt.Println("from checksum service: isFinished!")
-				isFinished <- struct{}{}
-				break
-			}
-		}
-	}()
+
 }
 
 // IsFinished checks if there is really no more work for us to do before we can send the md5 info to data source

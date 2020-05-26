@@ -82,8 +82,8 @@ func ProcessData() error {
 			}
 			traceBatchMap = batchTraceList[pos]
 			badTraceIdSetBatchPos := count/constants.BatchSize - 1
-			fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
-				traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)
+	/*		fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
+				traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)*/
 			sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
 			badTraceIdSet.Clear()
 		}
@@ -107,7 +107,7 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 	data["ids"] = traceIds
 	data["batchPos"] = batchPos
 	bytesData, _ := json.Marshal(data)
-	fmt.Printf("request body: %s\n", string(bytesData))
+	//fmt.Printf("request body: %s\n", string(bytesData))
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
 		"/setBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")

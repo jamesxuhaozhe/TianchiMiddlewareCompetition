@@ -24,6 +24,6 @@ func SetBadTraceIds(c *gin.Context) {
 
 func MarkFinish(c *gin.Context) {
 	engine.BumpProcessCount()
-	fmt.Printf("client marks finish.")
+	fmt.Printf("client marks finish.\n")
 	c.String(http.StatusOK, "suc")
 }
