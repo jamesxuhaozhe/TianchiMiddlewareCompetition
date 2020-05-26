@@ -18,8 +18,10 @@ var (
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
 	initDone        = make(chan struct{}, 1)
 
-	currentBatch = 0
+	currentBatch   = 0
 	availableBatch = make(chan *BadTraceIdsBatch)
+
+	backendDone = make(chan struct{}, 1)
 )
 
 type BadTraceIdsBatch struct {
@@ -52,16 +54,38 @@ func Init() {
 				currentBatch = nextBatch
 				availableBatch <- currentBadTraceIdsBatch
 			}
+
+			select {
+			case <-backendDone:
+				break
+			default:
+				// do nothing
+			}
 		}
 	}()
 
 	go func() {
 		for {
-			for batch := range availableBatch {
-				fmt.Printf("batchPos: %d, processCount: %d, ids: %s\n", batch.batchPos, batch.processCount, batch.badTraceIds)
+			select {
+			// if we manage get one available batch from the channel
+			case batch := <-availableBatch:
+				process(batch)
+			default:
+				if IsFinished() {
+					sendCheckSum()
+				}
 			}
 		}
 	}()
+
+}
+
+// sendCheckSum computes the desired MD5 checksum results and send it to the data source
+func sendCheckSum() {
+
+}
+
+func process(batch *BadTraceIdsBatch) {
 
 }
 
@@ -75,8 +99,8 @@ func SetBadTraceIds(badTraceIds []string, batchPos int) {
 		//before := len(batch.badTraceIds)
 		batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
 		//after := len(batch.badTraceIds)
-/*		fmt.Printf("Add ids len is: %d, BatchPos: %d, pos: %d, bad ids before is: %d, after ids after is %d\n",
-			len(badTraceIds), batchPos, pos, before, after)*/
+		/*		fmt.Printf("Add ids len is: %d, BatchPos: %d, pos: %d, bad ids before is: %d, after ids after is %d\n",
+				len(badTraceIds), batchPos, pos, before, after)*/
 	}
 }
 
@@ -100,9 +124,18 @@ func StartCheckSumService() {
 	}()
 }
 
-// IsFinished checks if the whole process is finished
+// IsFinished checks if there is really no more work for us to do before we can send the md5 info to data source
+// 1. if we still have badTrace batch waiting for process, then it doesn't count as finish
+// 2. if we don't have all the finish signals from the client, then it doesn't count as finish
 func IsFinished() bool {
+	// check if all the batch in the badTraceIdsList has been processed
+	for _, v := range badTraceIdsList {
+		if v.batchPos != 0 {
+			return false
+		}
+	}
 	mu.RLock()
 	defer mu.RUnlock()
+	// checks if we have received all the finish signal from the client
 	return finishProcessCount == constants.ExpectedProcessCount
 }
