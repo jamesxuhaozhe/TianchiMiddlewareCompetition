@@ -33,7 +33,6 @@ func main() {
 	g := gin.New()
 
 	// routes
-	// TODO need to add more engine based on the process type
 	router.Load(g)
 
 	// client or backend process data structure init
