@@ -22,6 +22,7 @@ var (
 	availableBatch = make(chan *BadTraceIdsBatch)
 
 	backendDone = make(chan struct{}, 1)
+	isFinished = make(chan struct{})
 )
 
 type BadTraceIdsBatch struct {
@@ -84,12 +85,14 @@ func Init() {
 			// if we manage get one available batch from the channel
 			case batch := <-availableBatch:
 				process(batch)
-			default:
-				if IsFinished() {
+			case <-isFinished:
+				stop = true
+				break
+/*				if IsFinished() {
 					sendCheckSum()
 					backendDone <- struct{}{}
 					//stop = true
-				}
+				}*/
 			}
 			if stop {
 				break
@@ -102,7 +105,7 @@ func Init() {
 
 // sendCheckSum computes the desired MD5 checksum results and send it to the data source
 func sendCheckSum() {
-	fmt.Println("11111111111")
+	fmt.Println("Send check sum method invoked")
 }
 
 func process(batch *BadTraceIdsBatch) {
@@ -138,6 +141,7 @@ func StartCheckSumService() {
 		for {
 			if IsFinished() {
 				fmt.Println("from checksum service: isFinished!")
+				isFinished <- struct{}{}
 				break
 			}
 		}
