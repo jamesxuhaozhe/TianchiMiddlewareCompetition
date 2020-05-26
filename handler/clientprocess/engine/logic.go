@@ -95,6 +95,8 @@ func ProcessData() error {
 			return err
 		}
 	}
+	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize - 1)
+	markFinish()
 	fmt.Printf("Total span count: %d\n", count)
 	return nil
 }
@@ -122,6 +124,16 @@ func isBadSpan(tag *string) bool {
 		return true
 	}
 	return false
+}
+
+// markFinish informs the backend process server that the client has finished its job.
+func markFinish() bool {
+	resp, err := http.Get("http://" + constants.CommonUrlPrefix + constants.BackendProcessPort1 + "/markFinish")
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return true
 }
 
 // getUrl get the download url for the given server instance.

@@ -16,6 +16,7 @@ var (
 	finishProcessCount int8
 
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
+	initDone = make(chan struct{}, 1)
 )
 
 type BadTraceIdsBatch struct {
@@ -25,9 +26,13 @@ type BadTraceIdsBatch struct {
 }
 
 func Init() {
-	for i := 0; i < batchSize; i++ {
-		badTraceIdsList = append(badTraceIdsList, &BadTraceIdsBatch{})
-	}
+	go func() {
+		for i := 0; i < batchSize; i++ {
+			badTraceIdsList = append(badTraceIdsList, &BadTraceIdsBatch{})
+		}
+		initDone <- struct{}{}
+	}()
+
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.
@@ -50,6 +55,18 @@ func BumpProcessCount() {
 	mu.Lock()
 	defer mu.Unlock()
 	finishProcessCount++
+}
+
+func InitCheckSumService() {
+	<-initDone
+	go func() {
+		for {
+			if IsFinished() {
+				fmt.Println("from checksum service: isFinished!")
+				break
+			}
+		}
+	}()
 }
 
 // IsFinished checks if the whole process is finished

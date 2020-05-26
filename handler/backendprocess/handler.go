@@ -1,6 +1,7 @@
 package backendprocess
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess/engine"
 	"net/http"
@@ -23,5 +24,6 @@ func SetBadTraceIds(c *gin.Context) {
 
 func MarkFinish(c *gin.Context) {
 	engine.BumpProcessCount()
+	fmt.Printf("client marks finish.")
 	c.String(http.StatusOK, "suc")
 }
