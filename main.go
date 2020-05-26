@@ -38,7 +38,7 @@ func main() {
 	// client or backend process data structure init
 	if utils.IsBackendProcess() {
 		backend.Init()
-		backend.InitCheckSumService()
+		backend.StartCheckSumService()
 		// init checksum goroutine
 	} else if utils.IsClientProcess() {
 		client.Init()

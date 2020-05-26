@@ -16,7 +16,7 @@ var (
 	finishProcessCount int8
 
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
-	initDone = make(chan struct{}, 1)
+	initDone        = make(chan struct{}, 1)
 )
 
 type BadTraceIdsBatch struct {
@@ -57,7 +57,8 @@ func BumpProcessCount() {
 	finishProcessCount++
 }
 
-func InitCheckSumService() {
+// StartCheckSumService starts the service computing the checksum.
+func StartCheckSumService() {
 	<-initDone
 	go func() {
 		for {
