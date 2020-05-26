@@ -58,7 +58,7 @@ func Init() {
 	go func() {
 		for {
 			for batch := range availableBatch {
-				fmt.Printf("batchPos: %d, processCount: %d, ids: %s", batch.batchPos, batch.processCount, batch.badTraceIds)
+				fmt.Printf("batchPos: %d, processCount: %d, ids: %s\n", batch.batchPos, batch.processCount, batch.badTraceIds)
 			}
 		}
 	}()
