@@ -82,8 +82,8 @@ func ProcessData() error {
 			}
 			traceBatchMap = batchTraceList[pos]
 			badTraceIdSetBatchPos := count/constants.BatchSize - 1
-	/*		fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
-				traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)*/
+			/*		fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
+					traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)*/
 			sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
 			badTraceIdSet.Clear()
 		}
@@ -95,7 +95,7 @@ func ProcessData() error {
 			return err
 		}
 	}
-	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize - 1)
+	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize-1)
 	markFinish()
 	fmt.Printf("Total span count: %d\n", count)
 	return nil
