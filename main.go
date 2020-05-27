@@ -7,10 +7,10 @@ import (
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	backend "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess/engine"
 	client "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/clientprocess/engine"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/router"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 	"github.com/spf13/pflag"
-	"log"
 	"net/http"
 	"time"
 )
@@ -25,6 +25,8 @@ func main() {
 
 	// SetServerPort the conf
 	conf.SetServerPort(*port)
+
+	log.InitLogger()
 
 	// Set gin mode.
 	gin.SetMode(*mode)
@@ -47,12 +49,12 @@ func main() {
 	// Ping the server to make sure the router is working
 	go func() {
 		if err := pingServer(); err != nil {
-			log.Fatal("The router has no response, or it might took too long to start up.", err)
+			log.Fatal("The router has no response, or it might took too long to start up.")
 		}
-		log.Println("The router has been deployed successfully.")
+		log.Info("The router has been deployed successfully.")
 	}()
 
-	log.Printf("Start to listening the incoming requests on http address: %s\n",
+	log.Infof("Start to listening the incoming requests on http address: %s",
 		constants.CommonUrlPrefix+conf.GetServerPort())
 	log.Fatal(http.ListenAndServe(":"+conf.GetServerPort(), g).Error())
 }
@@ -64,7 +66,7 @@ func pingServer() error {
 		if err == nil && resp.StatusCode == 200 {
 			return nil
 		}
-		log.Println("Waiting for the router, retry in 1 second.")
+		log.Info("Waiting for the router, retry in 1 second.")
 		time.Sleep(time.Second)
 	}
 	return errors.New("cannot connect to the router")

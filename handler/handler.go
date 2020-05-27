@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/clientprocess/engine"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
-	"log"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ func SetParameter(c *gin.Context) {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	log.Printf("data source port is %s\n", port)
+	log.Infof("data source port is %s\n", port)
 
 	// set the datasource port
 	conf.SetDatasourcePort(port)

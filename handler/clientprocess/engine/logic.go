@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"io"
 	"net/http"
@@ -29,7 +29,7 @@ func Init() {
 		for i := 0; i < batchCount; i++ {
 			batchTraceList = append(batchTraceList, ds.NewConcurMap(constants.BatchSize))
 		}
-		fmt.Printf("batch trace list is populated. len is %d, cap is %d\n",
+		log.Infof("batch trace list is populated. len is %d, cap is %d",
 			len(batchTraceList), cap(batchTraceList))
 		initDone <- struct{}{}
 	}()
@@ -48,7 +48,7 @@ func ProcessData() error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("Start download from url: %s\n", url)
+	log.Infof("Start download from url: %s", url)
 
 	buf := bufio.NewReader(resp.Body)
 	count := 0
@@ -97,7 +97,7 @@ func ProcessData() error {
 	}
 	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize-1)
 	markFinish()
-	fmt.Printf("Total span count: %d\n", count)
+	log.Infof("Total span count: %d", count)
 	return nil
 }
 
@@ -107,7 +107,7 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 	data["ids"] = traceIds
 	data["batchPos"] = batchPos
 	bytesData, _ := json.Marshal(data)
-	//fmt.Printf("request body: %s\n", string(bytesData))
+	//log.Infof("request body: %s", string(bytesData))
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
 		"/setBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")

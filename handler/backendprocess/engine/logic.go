@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
 	"sync"
 )
 
@@ -62,22 +62,22 @@ func Init() {
 				break
 			}
 		}
-		fmt.Println("exiting the second goroutine!")
+		log.Info("exiting the second goroutine!")
 	}()
 
 	go func() {
-		fmt.Println("Entering second goroutine.")
+		log.Info("Entering second goroutine.")
 		for batch := range availableBatch {
 			process(batch)
 		}
-		fmt.Println("Exiting second goroutine.")
+		log.Info("Exiting second goroutine.")
 	}()
 
 }
 
 // sendCheckSum computes the desired MD5 checksum results and send it to the data source
 func sendCheckSum() {
-	fmt.Println("Send check sum method invoked")
+	log.Info("Send check sum method invoked")
 }
 
 func process(batch *BadTraceIdsBatch) {
