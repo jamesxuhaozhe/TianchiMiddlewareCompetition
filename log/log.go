@@ -13,43 +13,33 @@ var Logger *zap.SugaredLogger
 
 var logFilePath string
 
+// InitLogger inits the logger from zap. No log archive is enabled.
 func InitLogger() {
+	logFilePath = getLogFilePath()
 
-	//logFilePath = getLogFilePath()
-	// define the place where you want to store the log file
-	//writeSyncer := getLogWriter()
+	encoderConfig := zapcore.EncoderConfig{
+		MessageKey:     "msg",
+		LevelKey:       "level",
+		TimeKey:        "time",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+		EncodeName:     zapcore.FullNameEncoder,
+	}
 
-	// define encoding
-	//encoder := getEncoder()
+	level := zap.NewAtomicLevel()
+	level.SetLevel(zap.DebugLevel)
 
-	// init Logger
-	//core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
-
-	/*	rawJSON := []byte(`{
-		  "level": "debug",
-		  "encoding": "json",
-		  "outputPaths": ["stdout", "logfile/backend.log"],
-		  "errorOutputPaths": ["stderr"],
-		  "initialFields": {"foo": "bar"},
-		  "encoderConfig": {
-		    "messageKey": "message",
-		    "levelKey": "level",
-		    "levelEncoder": "lowercase"
-		  }
-		}`)
-
-		var cfg zap.Config
-		if err := json.Unmarshal(rawJSON, &cfg); err != nil {
-			panic(err)
-		}
-		tempLogger, err := cfg.Build()
-		if err != nil {
-			panic(err)
-		}
-		Logger = tempLogger.Sugar()*/
-	tempLogger, _ := zap.NewDevelopment()
+	// TODO: in the release version, we need to get rid off stdout
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig),
+		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), getLogWriter()), level)
+	tempLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	Logger = tempLogger.Sugar()
-	zap.AddCaller()
 }
 
 func getLogFilePath() string {
@@ -64,13 +54,6 @@ func getLogFilePath() string {
 		return "logfile/backend.log"
 	}
 	return "logfile/server.log"
-}
-
-func getEncoder() zapcore.Encoder {
-	encoderConfig := zap.NewDevelopmentEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
 func getLogWriter() zapcore.WriteSyncer {

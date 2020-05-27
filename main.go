@@ -26,6 +26,7 @@ func main() {
 	// SetServerPort the conf
 	conf.SetServerPort(*port)
 
+	// Init the logger
 	log.InitLogger()
 
 	// Set gin mode.
