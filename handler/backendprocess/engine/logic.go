@@ -13,7 +13,6 @@ import (
 const (
 	// we use 90 batches to cache the total bad trace id from two clients
 	batchSize = 65
-
 )
 
 var (
@@ -89,24 +88,22 @@ func sendCheckSum() {
 
 func process(batch *BadTraceIdsBatch, ports *[]string) {
 	//fmt.Printf("process batchPos: %d\n", batch.batchPos)
-/*	traceMap := make(map[string]*ds.StrSet)
-	for _, port := range *ports {
-		tempTraceMap := make(map[string]*[]string)
-		tempTraceMap = getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
-		for traceId, spanList := range tempTraceMap {
-			if spanSet, ok := traceMap[traceId]; ok {
-				spanSet.AddAll(*spanList)
-			} else {
-				spanSet = &ds.StrSet{}
-				spanSet.AddAll(*spanList)
-				traceMap[traceId] = spanSet
+	/*	traceMap := make(map[string]*ds.StrSet)
+		for _, port := range *ports {
+			tempTraceMap := make(map[string]*[]string)
+			tempTraceMap = getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
+			for traceId, spanList := range tempTraceMap {
+				if spanSet, ok := traceMap[traceId]; ok {
+					spanSet.AddAll(*spanList)
+				} else {
+					spanSet = &ds.StrSet{}
+					spanSet.AddAll(*spanList)
+					traceMap[traceId] = spanSet
+				}
 			}
-		}
-	}*/
+		}*/
 	getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
 }
-
-
 
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
 	client := &http.Client{}

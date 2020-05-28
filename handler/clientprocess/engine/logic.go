@@ -63,10 +63,10 @@ func ProcessData() error {
 			traceId := cols[0]
 			var spanList []string
 			existSpans, ok := traceBatchMap.Get(traceId)
-/*			count := 0
-			if existSpans != nil {
-				count = len(*existSpans)
-			}*/
+			/*			count := 0
+						if existSpans != nil {
+							count = len(*existSpans)
+						}*/
 			//log.Infof("Add traceId: %s into traceBatchMap, spans len before is: %d", traceId, count)
 			if !ok {
 				spanList = make([]string, 0, 50)
