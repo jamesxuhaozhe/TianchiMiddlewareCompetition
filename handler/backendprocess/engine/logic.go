@@ -1,14 +1,19 @@
 package engine
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
+	"net/http"
 	"sync"
 )
 
 const (
 	// we use 90 batches to cache the total bad trace id from two clients
 	batchSize = 65
+
 )
 
 var (
@@ -67,10 +72,12 @@ func Init() {
 
 	go func() {
 		log.Info("Entering second goroutine.")
+
+		ports := []string{constants.BackendProcessPort1, constants.ClientProcessPort2}
 		for batch := range availableBatch {
-			process(batch)
+			process(batch, &ports)
 		}
-		log.Info("Exiting second goroutine.")
+		log.Info("Exiting second goroutine.!!!!!!")
 	}()
 
 }
@@ -80,8 +87,54 @@ func sendCheckSum() {
 	log.Info("Send check sum method invoked")
 }
 
-func process(batch *BadTraceIdsBatch) {
+func process(batch *BadTraceIdsBatch, ports *[]string) {
 	//fmt.Printf("process batchPos: %d\n", batch.batchPos)
+/*	traceMap := make(map[string]*ds.StrSet)
+	for _, port := range *ports {
+		tempTraceMap := make(map[string]*[]string)
+		tempTraceMap = getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
+		for traceId, spanList := range tempTraceMap {
+			if spanSet, ok := traceMap[traceId]; ok {
+				spanSet.AddAll(*spanList)
+			} else {
+				spanSet = &ds.StrSet{}
+				spanSet.AddAll(*spanList)
+				traceMap[traceId] = spanSet
+			}
+		}
+	}*/
+	getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
+}
+
+
+
+func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
+	client := &http.Client{}
+	data := make(map[string]interface{})
+	data["ids"] = badTraceIds
+	data["batchPos"] = batchPos
+	bytesData, _ := json.Marshal(data)
+	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+"8000"+
+		"/getSpansForBadTraceIds", bytes.NewReader(bytesData))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("net work error")
+	}
+	type response struct {
+		Map map[string]*[]string `json:"map"`
+	}
+
+	var respo = response{}
+	if err := json.NewDecoder(resp.Body).Decode(&respo); err != nil {
+		return nil, err
+	}
+	log.Infof("get back data %v", respo)
+	return respo.Map, nil
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.

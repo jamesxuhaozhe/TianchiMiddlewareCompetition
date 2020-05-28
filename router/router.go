@@ -3,7 +3,8 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess"
+	backend "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/backendprocess"
+	client "github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/clientprocess"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 )
 
@@ -15,8 +16,12 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	g.GET("/setParameter", handler.SetParameter)
 
 	if utils.IsBackendProcess() {
-		g.POST("/setBadTraceIds", backendprocess.SetBadTraceIds)
-		g.GET("/markFinish", backendprocess.MarkFinish)
+		g.POST("/setBadTraceIds", backend.SetBadTraceIds)
+		g.GET("/markFinish", backend.MarkFinish)
+	}
+
+	if utils.IsClientProcess() {
+		g.POST("/getSpansForBadTraceIds", client.GetSpansForBadTraceId)
 	}
 
 	hg := g.Group("/check")

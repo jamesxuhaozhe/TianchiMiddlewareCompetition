@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/handler/clientprocess/engine"
@@ -28,13 +27,13 @@ func SetParameter(c *gin.Context) {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
-	log.Infof("data source port is %s\n", port)
+	log.Infof("data source port is %s", port)
 
 	// set the datasource port
 	conf.SetDatasourcePort(port)
 
 	if utils.IsClientProcess() {
-		fmt.Println("Client process starts processing data...")
+		log.Info("Client process starts processing data...")
 		go engine.ProcessData()
 	}
 	c.String(http.StatusOK, "suc")

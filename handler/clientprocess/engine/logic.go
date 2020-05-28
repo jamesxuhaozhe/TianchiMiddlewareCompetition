@@ -62,12 +62,21 @@ func ProcessData() error {
 		if cols != nil && len(cols) > 1 {
 			traceId := cols[0]
 			var spanList []string
-			_, ok := traceBatchMap.Get(traceId)
+			existSpans, ok := traceBatchMap.Get(traceId)
+/*			count := 0
+			if existSpans != nil {
+				count = len(*existSpans)
+			}*/
+			//log.Infof("Add traceId: %s into traceBatchMap, spans len before is: %d", traceId, count)
 			if !ok {
-				spanList = make([]string, 1000)
+				spanList = make([]string, 0, 50)
+				spanList = append(spanList, line)
 				traceBatchMap.Put(traceId, &spanList)
+			} else {
+				*existSpans = append(*existSpans, line)
 			}
-			spanList = append(spanList, line)
+			//mm, _ := traceBatchMap.Get(traceId)
+			//log.Infof("Finish traceId: %s into traceBatchMap, spans len after is: %d", traceId, len(*mm))
 			if len(cols) > 8 {
 				tag := cols[8]
 				if isBadSpan(&tag) {
@@ -101,6 +110,44 @@ func ProcessData() error {
 	return nil
 }
 
+func GetSpansForBadTraceId(badIds []string, batchPos int) (map[string]*[]string, error) {
+	log.Infof("get bad traceids batch request. batchPos: %d, badIds: %v", batchPos, badIds)
+	pos := batchPos % batchCount
+	previous := pos - 1
+	if previous == -1 {
+		previous = batchCount - 1
+	}
+	next := pos + 1
+	if next >= batchCount {
+		next = 0
+	}
+	resultMap := make(map[string]*[]string)
+	getSpansForBadTraceIds(previous, pos, &badIds, &resultMap)
+	getSpansForBadTraceIds(pos, pos, &badIds, &resultMap)
+	getSpansForBadTraceIds(next, pos, &badIds, &resultMap)
+	return resultMap, nil
+}
+
+func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *map[string]*[]string) {
+	batchMap := batchTraceList[batchPos]
+	for _, badId := range *badIds {
+		spansList, _ := batchMap.Get(badId)
+		if spansList != nil {
+			var existSpanList []string
+			resultMapValue := *resultMap
+			if existSpans, ok := resultMapValue[badId]; ok {
+				*existSpans = append(*existSpans, *spansList...)
+			} else {
+				existSpanList = append(existSpanList, *spansList...)
+				resultMapValue[badId] = &existSpanList
+			}
+
+			//spansCount := len(*spansList)
+			//log.Infof("getSpansForBadTraceIds: batchPos: %d, pos: %d, badId: %s, spans: %d", batchPos, pos, badId, spansCount)
+		}
+	}
+}
+
 func sendBadTraceIds(traceIds []string, batchPos int) {
 	client := &http.Client{}
 	data := make(map[string]interface{})
@@ -120,7 +167,8 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 func isBadSpan(tag *string) bool {
 	if strings.Contains(*tag, "error=1") {
 		return true
-	} else if strings.Contains(*tag, "http.status_code=") && !strings.Contains(*tag, "http.status_code=200") {
+	} else if strings.Contains(*tag, "http.status_code=") &&
+		!strings.Contains(*tag, "http.status_code=200") {
 		return true
 	}
 	return false

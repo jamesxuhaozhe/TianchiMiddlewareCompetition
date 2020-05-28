@@ -30,6 +30,15 @@ func (s *StrSet) Add(element string) bool {
 	return false
 }
 
+// AddAll adds bulky elements.
+func (s *StrSet) AddAll(elements []string) {
+	for _, element := range elements {
+		if !s.Contains(element) {
+			s.Add(element)
+		}
+	}
+}
+
 // Contains checks if the given element exists in the set.
 func (s *StrSet) Contains(element string) bool {
 	return s.set[element]
