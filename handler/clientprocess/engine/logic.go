@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 var (
 	batchTraceList = make([]*ds.ConcurMap, 0, batchCount)
 	initDone       = make(chan struct{}, 1)
+	start time.Time
+	after time.Time
 )
 
 // Init populates the data structure we need for further processing.
@@ -39,6 +42,8 @@ func Init() {
 func ProcessData() error {
 	// wait until Init is done
 	<-initDone
+
+	start = time.Now()
 
 	// start polling the data from the data source
 	url := getUrl()
@@ -90,6 +95,16 @@ func ProcessData() error {
 				pos = 0
 			}
 			traceBatchMap = batchTraceList[pos]
+
+			if traceBatchMap.Size() > 0 {
+				//traceBatchMap.Wait()
+				for {
+					time.Sleep(10 * time.Millisecond)
+					if traceBatchMap.Size() == 0 {
+						break
+					}
+				}
+			}
 			badTraceIdSetBatchPos := count/constants.BatchSize - 1
 			/*		fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
 					traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)*/
@@ -107,6 +122,8 @@ func ProcessData() error {
 	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize-1)
 	markFinish()
 	log.Infof("Total span count: %d", count)
+	after = time.Now()
+	log.Infof("Duration Delta: %v", after.Sub(start))
 	return nil
 }
 
@@ -125,6 +142,7 @@ func GetSpansForBadTraceId(badIds []string, batchPos int) (map[string]*[]string,
 	getSpansForBadTraceIds(previous, pos, &badIds, &resultMap)
 	getSpansForBadTraceIds(pos, pos, &badIds, &resultMap)
 	getSpansForBadTraceIds(next, pos, &badIds, &resultMap)
+	batchTraceList[previous].Clear()
 	return resultMap, nil
 }
 
