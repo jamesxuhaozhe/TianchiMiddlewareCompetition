@@ -7,8 +7,8 @@ import (
 )
 
 type getSpansForBadTraceIdsReq struct {
-	Ids []string `json:"ids"`
-	BatchPos int  `json:"batchPos"`
+	Ids      []string `json:"ids"`
+	BatchPos int      `json:"batchPos"`
 }
 
 type getSpansForBadTraceIdsResp struct {
@@ -30,7 +30,6 @@ func GetSpansForBadTraceId(c *gin.Context) {
 		return
 	}
 
-	resp := getSpansForBadTraceIdsResp{Map:result}
+	resp := getSpansForBadTraceIdsResp{Map: result}
 	c.JSON(http.StatusOK, resp)
 }
-
