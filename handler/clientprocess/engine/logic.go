@@ -99,7 +99,7 @@ func ProcessData() error {
 			if traceBatchMap.Size() > 0 {
 				//traceBatchMap.Wait()
 				for {
-					time.Sleep(10 * time.Millisecond)
+					time.Sleep(5 * time.Millisecond)
 					if traceBatchMap.Size() == 0 {
 						break
 					}
@@ -128,7 +128,7 @@ func ProcessData() error {
 }
 
 func GetSpansForBadTraceId(badIds []string, batchPos int) (map[string]*[]string, error) {
-	log.Infof("get bad traceids batch request. batchPos: %d, badIds: %v", batchPos, badIds)
+	//log.Infof("get bad traceids batch request. batchPos: %d, badIds: %v", batchPos, badIds)
 	pos := batchPos % batchCount
 	previous := pos - 1
 	if previous == -1 {

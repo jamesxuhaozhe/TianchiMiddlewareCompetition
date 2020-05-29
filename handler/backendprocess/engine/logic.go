@@ -130,7 +130,7 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	if err := json.NewDecoder(resp.Body).Decode(&respo); err != nil {
 		return nil, err
 	}
-	log.Infof("get back data %v", respo)
+	//log.Infof("get back data %v", respo)
 	return respo.Map, nil
 }
 
