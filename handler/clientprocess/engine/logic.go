@@ -22,8 +22,8 @@ const (
 var (
 	batchTraceList = make([]*ds.ConcurMap, 0, batchCount)
 	initDone       = make(chan struct{}, 1)
-	start time.Time
-	after time.Time
+	start          time.Time
+	after          time.Time
 )
 
 // Init populates the data structure we need for further processing.

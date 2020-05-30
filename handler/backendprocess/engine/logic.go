@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"net/http"
 	"sync"
 )
@@ -72,7 +73,7 @@ func Init() {
 	go func() {
 		log.Info("Entering second goroutine.")
 
-		ports := []string{constants.BackendProcessPort1, constants.ClientProcessPort2}
+		ports := []string{constants.ClientProcessPort1} //, constants.ClientProcessPort2}
 		for batch := range availableBatch {
 			process(batch, &ports)
 		}
@@ -87,22 +88,26 @@ func sendCheckSum() {
 }
 
 func process(batch *BadTraceIdsBatch, ports *[]string) {
-	//fmt.Printf("process batchPos: %d\n", batch.batchPos)
-	/*	traceMap := make(map[string]*ds.StrSet)
-		for _, port := range *ports {
-			tempTraceMap := make(map[string]*[]string)
-			tempTraceMap = getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
-			for traceId, spanList := range tempTraceMap {
-				if spanSet, ok := traceMap[traceId]; ok {
-					spanSet.AddAll(*spanList)
-				} else {
-					spanSet = &ds.StrSet{}
-					spanSet.AddAll(*spanList)
-					traceMap[traceId] = spanSet
-				}
+	log.Infof("process batchPos: %d", batch.batchPos)
+	traceMap := make(map[string]*ds.StrSet)
+	for _, port := range *ports {
+		tempTraceMap, err := getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
+		if err != nil {
+			log.Errorf("getTraceMapFromRemote error: batchPos: %d, port: %d", batch.batchPos, port)
+			continue
+		}
+		for traceId, spanList := range tempTraceMap {
+			if spanSet, ok := traceMap[traceId]; ok {
+				spanSet.AddAll(*spanList)
+			} else {
+				spanSet = ds.NewStrSet()
+				spanSet.AddAll(*spanList)
+				traceMap[traceId] = spanSet
 			}
-		}*/
-	getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
+		}
+	}
+	//log.Infof("traceMap: %s", traceMap)
+	//getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
 }
 
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
@@ -111,7 +116,7 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	data["ids"] = badTraceIds
 	data["batchPos"] = batchPos
 	bytesData, _ := json.Marshal(data)
-	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+"8000"+
+	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+port+
 		"/getSpansForBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
