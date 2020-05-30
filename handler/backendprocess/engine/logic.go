@@ -33,6 +33,10 @@ type BadTraceIdsBatch struct {
 	processCount int
 }
 
+type response struct {
+	Map map[string]*[]string `json:"map"`
+}
+
 func Init() {
 	go func() {
 		for i := 0; i < batchSize; i++ {
@@ -126,9 +130,6 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("net work error")
-	}
-	type response struct {
-		Map map[string]*[]string `json:"map"`
 	}
 
 	var respo = response{}
