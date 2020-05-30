@@ -176,7 +176,11 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
 		"/setBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf("sendBadTraceIds error, batchPos: %d", batchPos)
+		return
+	}
 	defer resp.Body.Close()
 }
 
