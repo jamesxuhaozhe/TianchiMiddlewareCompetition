@@ -166,6 +166,7 @@ func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *
 	}
 }
 
+// sendBadTraceIds sends the info to client for answers.
 func sendBadTraceIds(traceIds []string, batchPos int) {
 	client := &http.Client{}
 	data := make(map[string]interface{})
