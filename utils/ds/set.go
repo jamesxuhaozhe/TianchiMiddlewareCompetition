@@ -104,18 +104,14 @@ func (s *StrSet) SortedStr() string {
 	if len(s.set) == 0 {
 		return ""
 	}
-	spanSlice := make([]string, 0, len(s.set))
-	for k := range s.set {
-		spanSlice = append(spanSlice, k)
-	}
-
+	spanSlice := s.GetStrSlice()
 	sort.Stable(SpanSlice(spanSlice))
 	return strings.Join(spanSlice, "\n")
 }
 
 func (s *StrSet) GetStrSlice() []string {
 	tempKeys := make([]string, 0, len(s.set))
-	for k, _ := range s.set {
+	for k := range s.set {
 		tempKeys = append(tempKeys, k)
 	}
 	return tempKeys
