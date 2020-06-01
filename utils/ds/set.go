@@ -72,7 +72,6 @@ func (s *StrSet) ToJSON() string {
 	}
 }
 
-
 type SpanSlice []string
 
 func (s SpanSlice) Len() int {

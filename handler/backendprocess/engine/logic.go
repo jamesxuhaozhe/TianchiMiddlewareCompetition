@@ -26,7 +26,7 @@ var (
 	currentBatch   = 0
 	availableBatch = make(chan *BadTraceIdsBatch)
 
-	csMu = &sync.Mutex{}
+	csMu        = &sync.Mutex{}
 	checkSumMap = make(map[string]string)
 )
 
