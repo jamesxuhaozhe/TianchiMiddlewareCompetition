@@ -7,7 +7,6 @@ type ConcurMap struct {
 	cap   int
 	rwMap map[string]*[]string
 	mu    *sync.RWMutex
-	sem   chan struct{}
 }
 
 // NewConcurMap returns a pointer of type ConcurMap.
@@ -16,7 +15,6 @@ func NewConcurMap(cap int) *ConcurMap {
 		cap:   cap,
 		rwMap: make(map[string]*[]string, cap),
 		mu:    &sync.RWMutex{},
-		sem:   make(chan struct{}, 1),
 	}
 }
 
@@ -50,13 +48,4 @@ func (m *ConcurMap) Clear() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.rwMap = make(map[string]*[]string, m.cap)
-	//m.Done()
-}
-
-func (m *ConcurMap) Done() {
-	m.sem <- struct{}{}
-}
-
-func (m *ConcurMap) Wait() {
-	<-m.sem
 }

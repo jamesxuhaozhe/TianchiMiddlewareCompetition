@@ -25,6 +25,9 @@ var (
 
 	currentBatch   = 0
 	availableBatch = make(chan *BadTraceIdsBatch)
+
+	csMu = &sync.Mutex{}
+	checkSumMap = make(map[string]string)
 )
 
 type BadTraceIdsBatch struct {
@@ -112,6 +115,15 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 	}
 	//log.Infof("traceMap: %s", traceMap)
 	//getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
+	// update the checksum map
+	for traceId, spans := range traceMap {
+
+		spanStr := spans.SortedStr() + "\n"
+		csMu.Lock()
+		// TODO we need to get md5 digest of the spanstr
+		checkSumMap[traceId] = spanStr
+		csMu.Unlock()
+	}
 }
 
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {

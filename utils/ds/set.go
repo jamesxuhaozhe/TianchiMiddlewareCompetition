@@ -1,6 +1,11 @@
 package ds
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"sort"
+	"strconv"
+	"strings"
+)
 
 // StrSet is a customized data structure to hold a set of string.
 type StrSet struct {
@@ -65,6 +70,47 @@ func (s *StrSet) ToJSON() string {
 	} else {
 		return string(b)
 	}
+}
+
+
+type SpanSlice []string
+
+func (s SpanSlice) Len() int {
+	return len(s)
+}
+
+func (s SpanSlice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s SpanSlice) Less(i, j int) bool {
+	timeStampI, timeStampJ := toInt64(s[i]), toInt64(s[j])
+	return timeStampI < timeStampJ
+}
+
+func toInt64(span string) int64 {
+	cols := strings.Split(span, "|")
+	if len(cols) > 8 {
+		timeStamp, err := strconv.ParseInt(cols[1], 10, 64)
+		if err != nil {
+			return -1
+		}
+		return timeStamp
+	}
+	return -1
+}
+
+func (s *StrSet) SortedStr() string {
+	if len(s.set) == 0 {
+		return ""
+	}
+	spanSlice := make([]string, 0, len(s.set))
+	for k := range s.set {
+		spanSlice = append(spanSlice, k)
+	}
+
+	sort.Stable(SpanSlice(spanSlice))
+	return strings.Join(spanSlice, "\n")
 }
 
 func (s *StrSet) GetStrSlice() []string {
