@@ -62,7 +62,10 @@ func ProcessData() error {
 	traceBatchMap := batchTraceList[pos]
 	for {
 		count++
+		// TODO we should change this to readBytes
 		line, err := buf.ReadString('\n')
+		line = strings.Replace(line, "\n", "", -1)
+		//log.Infof("line: %s", line)
 		cols := strings.Split(line, "|")
 		if cols != nil && len(cols) > 1 {
 			traceId := cols[0]

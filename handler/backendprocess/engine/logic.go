@@ -6,10 +6,8 @@ import (
 	"errors"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
-	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"net/http"
-	"strings"
 	"sync"
 )
 
@@ -121,11 +119,12 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 	for traceId, spans := range traceMap {
 
 		spanStr := spans.SortedStr() + "\n"
-		md5Hash := strings.ToUpper(utils.MD5(spanStr))
-		csMu.Lock()
-		checkSumMap[traceId] = md5Hash
-		log.Infof("traceId: %s, md5: %s", traceId, md5Hash)
-		csMu.Unlock()
+		//md5Hash := strings.ToUpper(utils.MD5(spanStr))
+		//csMu.Lock()
+		//checkSumMap[traceId] = md5Hash
+		//log.Infof("traceId: %s, md5: %s", traceId, md5Hash)
+		log.Infof("traceId: %s   spans: %s", traceId, spanStr)
+		//csMu.Unlock()
 	}
 }
 
