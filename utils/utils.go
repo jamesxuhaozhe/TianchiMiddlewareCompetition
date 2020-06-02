@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 )
@@ -19,4 +21,13 @@ func IsBackendProcess() bool {
 		return true
 	}
 	return false
+}
+
+func MD5Bytes(s []byte) string {
+	ret := md5.Sum(s)
+	return hex.EncodeToString(ret[:])
+}
+
+func MD5(s string) string {
+	return MD5Bytes([]byte(s))
 }
