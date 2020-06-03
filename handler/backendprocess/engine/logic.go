@@ -6,8 +6,10 @@ import (
 	"errors"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -114,17 +116,29 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 		}
 	}
 	//log.Infof("traceMap: %s", traceMap)
-	//getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, "")
 	// update the checksum map
+	// following are tests
+	mapToCheck := make(map[string]string)
 	for traceId, spans := range traceMap {
 
 		spanStr := spans.SortedStr() + "\n"
-		//md5Hash := strings.ToUpper(utils.MD5(spanStr))
-		//csMu.Lock()
-		//checkSumMap[traceId] = md5Hash
-		//log.Infof("traceId: %s, md5: %s", traceId, md5Hash)
-		log.Infof("traceId: %s   spans: %s", traceId, spanStr)
-		//csMu.Unlock()
+		md5Hash := strings.ToUpper(utils.MD5(spanStr))
+		mapToCheck[traceId] = md5Hash
+	}
+
+
+	client := &http.Client{}
+	data := make(map[string]interface{})
+	data["map"] = mapToCheck
+	data["batchPos"] = batch.batchPos
+	bytesData, _ := json.Marshal(data)
+	req, _ := http.NewRequest("POST", "http://localhost:8003/verifymd5", bytes.NewReader(bytesData))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error("verify2 fail")
+	} else {
+		defer resp.Body.Close()
 	}
 }
 
@@ -150,6 +164,21 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	if err := json.NewDecoder(resp.Body).Decode(&respo); err != nil {
 		return nil, err
 	}
+
+	// following are verify code
+	dataV := make(map[string]interface{})
+	dataV["batchPos"] = batchPos
+	dataV["map"] = respo.Map
+	bytesDataV, _ := json.Marshal(dataV)
+	reqV, _ := http.NewRequest("POST", "http://localhost:8003/verifygetTraceMapFromRemote", bytes.NewReader(bytesDataV))
+	reqV.Header.Set("Content-Type", "application/json")
+	respV, err := client.Do(reqV)
+	if err != nil {
+		log.Error("verify failure")
+	}
+	defer respV.Body.Close()
+	///////////////////////
+
 	//log.Infof("get back data %v", respo)
 	return respo.Map, nil
 }
