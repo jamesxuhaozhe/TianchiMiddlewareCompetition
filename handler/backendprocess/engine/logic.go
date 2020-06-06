@@ -126,7 +126,6 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 		mapToCheck[traceId] = md5Hash
 	}
 
-
 	client := &http.Client{}
 	data := make(map[string]interface{})
 	data["map"] = mapToCheck
