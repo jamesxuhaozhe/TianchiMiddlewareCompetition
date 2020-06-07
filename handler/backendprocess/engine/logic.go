@@ -206,7 +206,7 @@ func BumpProcessCount() {
 
 // StartCheckSumService starts the service computing the checksum.
 func StartCheckSumService() {
-
+	//TODO send the result to data source
 }
 
 // IsFinished checks if there is really no more work for us to do before we can send the md5 info to data source
