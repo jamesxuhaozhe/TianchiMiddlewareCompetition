@@ -12,7 +12,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	g.Use(gin.Recovery())
 	g.Use(mw...)
 
-	g.HEAD("/ready", handler.Ready)
+	g.GET("/ready", handler.Ready)
 	g.GET("/setParameter", handler.SetParameter)
 
 	if utils.IsBackendProcess() {
