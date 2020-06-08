@@ -151,9 +151,6 @@ func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *
 				existSpanList = append(existSpanList, *spansList...)
 				resultMapValue[badId] = &existSpanList
 			}
-
-			//spansCount := len(*spansList)
-			//log.Infof("getSpansForBadTraceIds: batchPos: %d, pos: %d, badId: %s, spans: %d", batchPos, pos, badId, spansCount)
 		}
 	}
 }
@@ -166,7 +163,6 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 	data["ids"] = traceIds
 	data["batchPos"] = batchPos
 	bytesData, _ := json.Marshal(data)
-	//log.Infof("request body: %s", string(bytesData))
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
 		"/setBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")
