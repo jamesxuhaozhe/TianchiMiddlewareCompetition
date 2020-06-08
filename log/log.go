@@ -15,7 +15,7 @@ var logFilePath string
 
 // InitLogger inits the logger from zap. No log archive is enabled.
 func InitLogger() {
-	logFilePath = getLogFilePath()
+	//logFilePath = getLogFilePath()
 
 	encoderConfig := zapcore.EncoderConfig{
 		MessageKey:     "msg",
@@ -35,9 +35,8 @@ func InitLogger() {
 	level := zap.NewAtomicLevel()
 	level.SetLevel(zap.DebugLevel)
 
-	// TODO: in the release version, we need to get rid off stdout
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), getLogWriter()), level)
+		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout)/**, getLogWriter()**/), level)
 	tempLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	Logger = tempLogger.Sugar()
 }
