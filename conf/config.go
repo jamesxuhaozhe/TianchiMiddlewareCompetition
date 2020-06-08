@@ -24,3 +24,8 @@ func SetDatasourcePort(port string) {
 func GetDatasourcePort() string {
 	return datasourcePort
 }
+
+// GetLocalTestPort gets
+func GetLocalTestPort() string {
+	return "80"
+}

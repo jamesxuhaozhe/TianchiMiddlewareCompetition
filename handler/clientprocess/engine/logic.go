@@ -100,7 +100,6 @@ func ProcessData() error {
 			traceBatchMap = batchTraceList[pos]
 
 			if traceBatchMap.Size() > 0 {
-				//traceBatchMap.Wait()
 				for {
 					time.Sleep(5 * time.Millisecond)
 					if traceBatchMap.Size() == 0 {
@@ -109,8 +108,6 @@ func ProcessData() error {
 				}
 			}
 			badTraceIdSetBatchPos := count/constants.BatchSize - 1
-			/*		fmt.Printf("batch size: %d, badTraceSet size: %d, count: %d, badTraceIdSetBatchPos: %d\n",
-					traceBatchMap.Size(), badTraceIdSet.Size(), count, badTraceIdSetBatchPos)*/
 			sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
 			badTraceIdSet.Clear()
 		}
@@ -171,6 +168,7 @@ func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *
 
 // sendBadTraceIds sends the info to client for answers.
 func sendBadTraceIds(traceIds []string, batchPos int) {
+	//log.Infof("SendBadTraceIds, batchPos: %d", batchPos)
 	client := &http.Client{}
 	data := make(map[string]interface{})
 	data["ids"] = traceIds
@@ -202,6 +200,7 @@ func isBadSpan(tag *string) bool {
 
 // markFinish informs the backend process server that the client has finished its job.
 func markFinish() bool {
+	log.Info("markFinish gets called")
 	resp, err := http.Get("http://" + constants.CommonUrlPrefix + constants.BackendProcessPort1 + "/markFinish")
 	if err != nil {
 		return false
@@ -214,9 +213,9 @@ func markFinish() bool {
 func getUrl() string {
 	svrPort := conf.GetServerPort()
 	if svrPort == constants.ClientProcessPort1 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace1.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace1.data"
 	} else if svrPort == constants.ClientProcessPort2 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace2.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace2.data"
 	}
 	return ""
 }

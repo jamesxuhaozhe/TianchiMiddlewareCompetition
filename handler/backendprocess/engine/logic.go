@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/conf"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/log"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils"
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 )
@@ -67,22 +69,32 @@ func Init() {
 					nextBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount) {
 				badTraceIdsList[currentBatch] = &BadTraceIdsBatch{}
 				currentBatch = nextBatch
-				//fmt.Printf("Send batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
 				availableBatch <- currentBadTraceIdsBatch
-				//fmt.Printf("finish sending batchpos: %d\n", currentBadTraceIdsBatch.batchPos)
 			}
 			if IsFinished() {
 				close(availableBatch)
 				break
 			}
 		}
+
+		pathurl := "http://localhost:" + conf.GetDatasourcePort() + "/api/finished"
+		checkSumJson, _ := json.Marshal(checkSumMap)
+		checkSumString := string(checkSumJson)
+		resp, err := http.PostForm(pathurl, url.Values{"result": {checkSumString}})
+		if err != nil {
+			log.Error("send checkSum fail")
+		} else {
+			log.Info("Suc to send checksum!")
+			defer resp.Body.Close()
+		}
+
 		log.Info("exiting the second goroutine!")
 	}()
 
 	go func() {
 		log.Info("Entering second goroutine.")
 
-		ports := []string{constants.ClientProcessPort1} //, constants.ClientProcessPort2}
+		ports := []string{constants.ClientProcessPort1, constants.ClientProcessPort2}
 		for batch := range availableBatch {
 			process(batch, &ports)
 		}
@@ -97,7 +109,7 @@ func sendCheckSum() {
 }
 
 func process(batch *BadTraceIdsBatch, ports *[]string) {
-	log.Infof("process batchPos: %d", batch.batchPos)
+	//log.Infof("process batchPos: %d", batch.batchPos)
 	traceMap := make(map[string]*ds.StrSet)
 	for _, port := range *ports {
 		tempTraceMap, err := getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
@@ -115,33 +127,42 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 			}
 		}
 	}
+	for traceId, spans := range traceMap {
+		spanStr := spans.SortedStr() + "\n"
+		md5Hash := strings.ToUpper(utils.MD5(spanStr))
+		csMu.Lock()
+		checkSumMap[traceId] = md5Hash
+		csMu.Unlock()
+	}
+
 	//log.Infof("traceMap: %s", traceMap)
 	// update the checksum map
 	// following are tests
-	mapToCheck := make(map[string]string)
-	for traceId, spans := range traceMap {
+	/*	mapToCheck := make(map[string]string)
+		for traceId, spans := range traceMap {
 
-		spanStr := spans.SortedStr() + "\n"
-		md5Hash := strings.ToUpper(utils.MD5(spanStr))
-		mapToCheck[traceId] = md5Hash
-	}
+			spanStr := spans.SortedStr() + "\n"
+			md5Hash := strings.ToUpper(utils.MD5(spanStr))
+			mapToCheck[traceId] = md5Hash
+		}
 
-	client := &http.Client{}
-	data := make(map[string]interface{})
-	data["map"] = mapToCheck
-	data["batchPos"] = batch.batchPos
-	bytesData, _ := json.Marshal(data)
-	req, _ := http.NewRequest("POST", "http://localhost:8003/verifymd5", bytes.NewReader(bytesData))
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error("verify2 fail")
-	} else {
-		defer resp.Body.Close()
-	}
+		client := &http.Client{}
+		data := make(map[string]interface{})
+		data["map"] = mapToCheck
+		data["batchPos"] = batch.batchPos
+		bytesData, _ := json.Marshal(data)
+		req, _ := http.NewRequest("POST", "http://localhost:8003/verifymd5", bytes.NewReader(bytesData))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Error("verify2 fail")
+		} else {
+			defer resp.Body.Close()
+		}*/
 }
 
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
+	//log.Infof("getTraceMapFromRemote, batchPos: %d, port: %d", batchPos, port)
 	client := &http.Client{}
 	data := make(map[string]interface{})
 	data["ids"] = badTraceIds
@@ -165,17 +186,17 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	}
 
 	// following are verify code
-	dataV := make(map[string]interface{})
-	dataV["batchPos"] = batchPos
-	dataV["map"] = respo.Map
-	bytesDataV, _ := json.Marshal(dataV)
-	reqV, _ := http.NewRequest("POST", "http://localhost:8003/verifygetTraceMapFromRemote", bytes.NewReader(bytesDataV))
-	reqV.Header.Set("Content-Type", "application/json")
-	respV, err := client.Do(reqV)
-	if err != nil {
-		log.Error("verify failure")
-	}
-	defer respV.Body.Close()
+	/*	dataV := make(map[string]interface{})
+		dataV["batchPos"] = batchPos
+		dataV["map"] = respo.Map
+		bytesDataV, _ := json.Marshal(dataV)
+		reqV, _ := http.NewRequest("POST", "http://localhost:8003/verifygetTraceMapFromRemote", bytes.NewReader(bytesDataV))
+		reqV.Header.Set("Content-Type", "application/json")
+		respV, err := client.Do(reqV)
+		if err != nil {
+			log.Error("verify failure")
+		}
+		defer respV.Body.Close()*/
 	///////////////////////
 
 	//log.Infof("get back data %v", respo)
@@ -189,11 +210,7 @@ func SetBadTraceIds(badTraceIds []string, batchPos int) {
 	if len(badTraceIds) > 0 {
 		batch.batchPos = batchPos
 		batch.processCount++
-		//before := len(batch.badTraceIds)
 		batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
-		//after := len(batch.badTraceIds)
-		/*		fmt.Printf("Add ids len is: %d, BatchPos: %d, pos: %d, bad ids before is: %d, after ids after is %d\n",
-				len(badTraceIds), batchPos, pos, before, after)*/
 	}
 }
 

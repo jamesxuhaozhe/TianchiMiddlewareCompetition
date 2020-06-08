@@ -16,5 +16,5 @@ const (
 	BatchSize = 20000
 
 	// Ideally when two clients both finish, the process count should be 2
-	ExpectedProcessCount = 1
+	ExpectedProcessCount = 2
 )
