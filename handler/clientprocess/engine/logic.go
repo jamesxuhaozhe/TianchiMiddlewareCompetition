@@ -65,17 +65,11 @@ func ProcessData() error {
 		// TODO we should change this to readBytes
 		line, err := buf.ReadString('\n')
 		line = strings.Replace(line, "\n", "", -1)
-		//log.Infof("line: %s", line)
 		cols := strings.Split(line, "|")
 		if cols != nil && len(cols) > 1 {
 			traceId := cols[0]
 			var spanList []string
 			existSpans, ok := traceBatchMap.Get(traceId)
-			/*			count := 0
-						if existSpans != nil {
-							count = len(*existSpans)
-						}*/
-			//log.Infof("Add traceId: %s into traceBatchMap, spans len before is: %d", traceId, count)
 			if !ok {
 				spanList = make([]string, 0, 50)
 				spanList = append(spanList, line)
@@ -83,8 +77,6 @@ func ProcessData() error {
 			} else {
 				*existSpans = append(*existSpans, line)
 			}
-			//mm, _ := traceBatchMap.Get(traceId)
-			//log.Infof("Finish traceId: %s into traceBatchMap, spans len after is: %d", traceId, len(*mm))
 			if len(cols) > 8 {
 				tag := cols[8]
 				if isBadSpan(&tag) {
