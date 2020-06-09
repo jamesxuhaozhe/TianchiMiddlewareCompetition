@@ -78,7 +78,9 @@ func Init() {
 		}
 
 		pathurl := "http://localhost:" + conf.GetDatasourcePort() + "/api/finished"
+		csMu.Lock()
 		checkSumJson, _ := json.Marshal(checkSumMap)
+		csMu.Unlock()
 		checkSumString := string(checkSumJson)
 		resp, err := http.PostForm(pathurl, url.Values{"result": {checkSumString}})
 		if err != nil {
