@@ -36,7 +36,7 @@ func InitLogger() {
 	level.SetLevel(zap.DebugLevel)
 
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout)/**, getLogWriter()**/), level)
+		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout) /**, getLogWriter()**/), level)
 	tempLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	Logger = tempLogger.Sugar()
 }
