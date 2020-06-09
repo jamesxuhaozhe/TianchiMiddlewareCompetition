@@ -11,7 +11,6 @@ import (
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/utils/ds"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 )
 
@@ -131,7 +130,7 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 	}
 	for traceId, spans := range traceMap {
 		spanStr := spans.SortedStr() + "\n"
-		md5Hash := strings.ToUpper(utils.MD5(spanStr))
+		md5Hash := utils.MD5(spanStr)
 		csMu.Lock()
 		checkSumMap[traceId] = md5Hash
 		csMu.Unlock()
@@ -173,6 +172,7 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+port+
 		"/getSpansForBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connection", "keep-alive")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

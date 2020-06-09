@@ -62,9 +62,8 @@ func ProcessData() error {
 	traceBatchMap := batchTraceList[pos]
 	for {
 		count++
-		// TODO we should change this to readBytes
 		line, err := buf.ReadString('\n')
-		line = strings.Replace(line, "\n", "", -1)
+		line = strings.TrimRight(line, "\n")
 		cols := strings.Split(line, "|")
 		if cols != nil && len(cols) > 1 {
 			traceId := cols[0]
@@ -166,6 +165,7 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 	req, _ := http.NewRequest("POST", "http://"+constants.CommonUrlPrefix+constants.BackendProcessPort1+
 		"/setBadTraceIds", bytes.NewReader(bytesData))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connection", "keep-alive")
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf("sendBadTraceIds error, batchPos: %d", batchPos)
