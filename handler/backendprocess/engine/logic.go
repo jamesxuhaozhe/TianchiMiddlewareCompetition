@@ -27,10 +27,9 @@ var (
 	initDone        = make(chan struct{})
 
 	currentBatch   = 0
-	availableBatch = make(chan *BadTraceIdsBatch, batchSize)
 
 	csMu        = &sync.Mutex{}
-	checkSumMap = make(map[string]string, 800)
+	checkSumMap = make(map[string]string, 10000)
 
 	ports = []string{constants.ClientProcessPort1, constants.ClientProcessPort2}
 )
@@ -70,10 +69,9 @@ func Start() {
 					nextBadTraceIdsBatch.processCount >= constants.ExpectedProcessCount) {
 				badTraceIdsList[currentBatch] = &BadTraceIdsBatch{}
 				currentBatch = nextBatch
-				availableBatch <- currentBadTraceIdsBatch
+				process(currentBadTraceIdsBatch)
 			}
 			if IsFinished() {
-				close(availableBatch)
 				break
 			}
 		}
@@ -93,14 +91,6 @@ func Start() {
 
 		log.Info("exiting the second goroutine!")
 	}()
-
-	go func() {
-		for batch := range availableBatch {
-			process(batch)
-		}
-		log.Info("Exiting second goroutine.!!!!!!")
-	}()
-
 }
 
 func process(batch *BadTraceIdsBatch) {

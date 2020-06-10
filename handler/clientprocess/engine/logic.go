@@ -16,7 +16,7 @@ import (
 
 const (
 	// we initialize a ring buffer with 15 slots to hold trace spans
-	batchCount = 15
+	batchCount = 50
 )
 
 var (
@@ -102,6 +102,7 @@ func ProcessData() error {
 	url := getUrl()
 	resp, err := http.Get(url)
 	if err != nil {
+		log.Error("error occurred when downloading.")
 		return err
 	}
 	defer resp.Body.Close()
@@ -209,9 +210,9 @@ func markFinish() bool {
 func getUrl() string {
 	svrPort := conf.GetServerPort()
 	if svrPort == constants.ClientProcessPort1 {
-		return "http://localhost:" + conf.GetLocalTestPort() + "/trace1.data"
+		return "http://localhost:" + conf.GetDatasourcePort() + "/trace1.data"
 	} else if svrPort == constants.ClientProcessPort2 {
-		return "http://localhost:" + conf.GetLocalTestPort() + "/trace2.data"
+		return "http://localhost:" + conf.GetDatasourcePort() + "/trace2.data"
 	}
 	return ""
 }
