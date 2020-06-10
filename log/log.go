@@ -16,7 +16,6 @@ var logFilePath string
 // InitLogger inits the logger from zap. No log archive is enabled.
 func InitLogger() {
 	//logFilePath = getLogFilePath()
-
 	encoderConfig := zapcore.EncoderConfig{
 		MessageKey:     "msg",
 		LevelKey:       "level",

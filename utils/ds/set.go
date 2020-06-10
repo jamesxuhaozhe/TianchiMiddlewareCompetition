@@ -1,7 +1,6 @@
 package ds
 
 import (
-	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,9 +37,7 @@ func (s *StrSet) Add(element string) bool {
 // AddAll adds bulky elements.
 func (s *StrSet) AddAll(elements []string) {
 	for _, element := range elements {
-		if !s.Contains(element) {
-			s.Add(element)
-		}
+		s.Add(element)
 	}
 }
 
@@ -57,19 +54,6 @@ func (s *StrSet) Clear() {
 // Size returns number of the elements in the set.
 func (s *StrSet) Size() int {
 	return len(s.set)
-}
-
-func (s *StrSet) ToJSON() string {
-	tempKeys := make([]string, 0, len(s.set))
-	for k, _ := range s.set {
-		tempKeys = append(tempKeys, k)
-	}
-	b, err := json.MarshalIndent(tempKeys, "", "  ")
-	if err != nil {
-		return ""
-	} else {
-		return string(b)
-	}
 }
 
 type SpanSlice []string

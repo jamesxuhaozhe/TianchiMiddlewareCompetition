@@ -24,10 +24,11 @@ var (
 	initDone       = make(chan struct{}, 1)
 	start          time.Time
 	after          time.Time
+	lineChan       = make(chan string, 300)
 )
 
-// Init populates the data structure we need for further processing.
-func Init() {
+// Start populates the data structure we need for further processing.
+func Start() {
 	go func() {
 		for i := 0; i < batchCount; i++ {
 			batchTraceList = append(batchTraceList, ds.NewConcurMap(constants.BatchSize))
@@ -40,10 +41,62 @@ func Init() {
 
 // processData executes the core logic of the client process, polling data from the data source and
 func ProcessData() error {
-	// wait until Init is done
+	// wait until Start is done
 	<-initDone
 
-	start = time.Now()
+	// spin up one goroutine to process available data
+	go func() {
+		start = time.Now()
+		count := 0
+		pos := 0
+		badTraceIdSet := ds.NewStrSet()
+		traceBatchMap := batchTraceList[pos]
+		for line := range lineChan {
+			count++
+			cols := strings.Split(line, "|")
+			if cols != nil && len(cols) > 1 {
+				traceId := cols[0]
+				var spanList []string
+				existSpans, ok := traceBatchMap.Get(traceId)
+				if !ok {
+					spanList = make([]string, 0, 50)
+					spanList = append(spanList, line)
+					traceBatchMap.Put(traceId, &spanList)
+				} else {
+					*existSpans = append(*existSpans, line)
+				}
+				if len(cols) > 8 {
+					tag := cols[8]
+					if isBadSpan(tag) {
+						badTraceIdSet.Add(traceId)
+					}
+				}
+			}
+			if count%constants.BatchSize == 0 {
+				pos++
+				if pos >= batchCount {
+					pos = 0
+				}
+				traceBatchMap = batchTraceList[pos]
+
+				if traceBatchMap.Size() > 0 {
+					for {
+						time.Sleep(5 * time.Millisecond)
+						if traceBatchMap.Size() == 0 {
+							break
+						}
+					}
+				}
+				badTraceIdSetBatchPos := count/constants.BatchSize - 1
+				sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
+				badTraceIdSet.Clear()
+			}
+		}
+		sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize-1)
+		markFinish()
+		after = time.Now()
+		log.Infof("Duration Delta: %v", after.Sub(start))
+	}()
 
 	// start polling the data from the data source
 	url := getUrl()
@@ -53,73 +106,29 @@ func ProcessData() error {
 	}
 	defer resp.Body.Close()
 
-	log.Infof("Start download from url: %s", url)
-
 	buf := bufio.NewReader(resp.Body)
-	count := 0
-	pos := 0
-	badTraceIdSet := ds.NewStrSet()
-	traceBatchMap := batchTraceList[pos]
 	for {
-		count++
+		//count++
 		line, err := buf.ReadString('\n')
 		line = strings.TrimRight(line, "\n")
-		cols := strings.Split(line, "|")
-		if cols != nil && len(cols) > 1 {
-			traceId := cols[0]
-			var spanList []string
-			existSpans, ok := traceBatchMap.Get(traceId)
-			if !ok {
-				spanList = make([]string, 0, 50)
-				spanList = append(spanList, line)
-				traceBatchMap.Put(traceId, &spanList)
-			} else {
-				*existSpans = append(*existSpans, line)
-			}
-			if len(cols) > 8 {
-				tag := cols[8]
-				if isBadSpan(&tag) {
-					badTraceIdSet.Add(traceId)
-				}
-			}
-		}
-		if count%constants.BatchSize == 0 {
-			pos++
-			if pos >= batchCount {
-				pos = 0
-			}
-			traceBatchMap = batchTraceList[pos]
+		lineChan <- line
 
-			if traceBatchMap.Size() > 0 {
-				for {
-					time.Sleep(5 * time.Millisecond)
-					if traceBatchMap.Size() == 0 {
-						break
-					}
-				}
-			}
-			badTraceIdSetBatchPos := count/constants.BatchSize - 1
-			sendBadTraceIds(badTraceIdSet.GetStrSlice(), badTraceIdSetBatchPos)
-			badTraceIdSet.Clear()
-		}
 		if err != nil {
 			if err == io.EOF {
 				// done reading all lines
+				close(lineChan)
+				log.Info("Done reading all lines")
 				break
 			}
+			close(lineChan)
+			log.Error("Unknown error occurred when reading lines.")
 			return err
 		}
 	}
-	sendBadTraceIds(badTraceIdSet.GetStrSlice(), count/constants.BatchSize-1)
-	markFinish()
-	log.Infof("Total span count: %d", count)
-	after = time.Now()
-	log.Infof("Duration Delta: %v", after.Sub(start))
 	return nil
 }
 
 func GetSpansForBadTraceId(badIds []string, batchPos int) (map[string]*[]string, error) {
-	//log.Infof("get bad traceids batch request. batchPos: %d, badIds: %v", batchPos, badIds)
 	pos := batchPos % batchCount
 	previous := pos - 1
 	if previous == -1 {
@@ -129,17 +138,17 @@ func GetSpansForBadTraceId(badIds []string, batchPos int) (map[string]*[]string,
 	if next >= batchCount {
 		next = 0
 	}
-	resultMap := make(map[string]*[]string)
-	getSpansForBadTraceIds(previous, pos, &badIds, &resultMap)
-	getSpansForBadTraceIds(pos, pos, &badIds, &resultMap)
-	getSpansForBadTraceIds(next, pos, &badIds, &resultMap)
+	resultMap := make(map[string]*[]string, len(badIds))
+	getSpansForBadTraceIds(previous, badIds, &resultMap)
+	getSpansForBadTraceIds(pos, badIds, &resultMap)
+	getSpansForBadTraceIds(next, badIds, &resultMap)
 	batchTraceList[previous].Clear()
 	return resultMap, nil
 }
 
-func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *map[string]*[]string) {
+func getSpansForBadTraceIds(batchPos int, badIds []string, resultMap *map[string]*[]string) {
 	batchMap := batchTraceList[batchPos]
-	for _, badId := range *badIds {
+	for _, badId := range badIds {
 		spansList, _ := batchMap.Get(badId)
 		if spansList != nil {
 			var existSpanList []string
@@ -156,7 +165,6 @@ func getSpansForBadTraceIds(batchPos int, pos int, badIds *[]string, resultMap *
 
 // sendBadTraceIds sends the info to client for answers.
 func sendBadTraceIds(traceIds []string, batchPos int) {
-	//log.Infof("SendBadTraceIds, batchPos: %d", batchPos)
 	client := &http.Client{}
 	data := make(map[string]interface{})
 	data["ids"] = traceIds
@@ -176,11 +184,11 @@ func sendBadTraceIds(traceIds []string, batchPos int) {
 
 // isBadSpan checks if the given tag belongs to a bad span.
 // a bad span is defined as whose tags contains 'error=1' or 'http.status_code!=200'
-func isBadSpan(tag *string) bool {
-	if strings.Contains(*tag, "error=1") {
+func isBadSpan(tag string) bool {
+	if strings.Contains(tag, "error=1") {
 		return true
-	} else if strings.Contains(*tag, "http.status_code=") &&
-		!strings.Contains(*tag, "http.status_code=200") {
+	} else if strings.Contains(tag, "http.status_code=") &&
+		!strings.Contains(tag, "http.status_code=200") {
 		return true
 	}
 	return false
@@ -201,9 +209,9 @@ func markFinish() bool {
 func getUrl() string {
 	svrPort := conf.GetServerPort()
 	if svrPort == constants.ClientProcessPort1 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace1.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace1.data"
 	} else if svrPort == constants.ClientProcessPort2 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace2.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace2.data"
 	}
 	return ""
 }

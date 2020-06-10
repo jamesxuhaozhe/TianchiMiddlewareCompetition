@@ -27,10 +27,12 @@ var (
 	initDone        = make(chan struct{})
 
 	currentBatch   = 0
-	availableBatch = make(chan *BadTraceIdsBatch)
+	availableBatch = make(chan *BadTraceIdsBatch, batchSize)
 
 	csMu        = &sync.Mutex{}
-	checkSumMap = make(map[string]string)
+	checkSumMap = make(map[string]string, 800)
+
+	ports = []string{constants.ClientProcessPort1, constants.ClientProcessPort2}
 )
 
 type BadTraceIdsBatch struct {
@@ -43,7 +45,7 @@ type response struct {
 	Map map[string]*[]string `json:"map"`
 }
 
-func Init() {
+func Start() {
 	go func() {
 		for i := 0; i < batchSize; i++ {
 			badTraceIdsList = append(badTraceIdsList, &BadTraceIdsBatch{})
@@ -76,12 +78,12 @@ func Init() {
 			}
 		}
 
-		pathurl := "http://localhost:" + conf.GetDatasourcePort() + "/api/finished"
 		csMu.Lock()
 		checkSumJson, _ := json.Marshal(checkSumMap)
 		csMu.Unlock()
 		checkSumString := string(checkSumJson)
-		resp, err := http.PostForm(pathurl, url.Values{"result": {checkSumString}})
+		resp, err := http.PostForm("http://localhost:"+conf.GetDatasourcePort()+"/api/finished",
+			url.Values{"result": {checkSumString}})
 		if err != nil {
 			log.Error("send checkSum fail")
 		} else {
@@ -93,26 +95,17 @@ func Init() {
 	}()
 
 	go func() {
-		log.Info("Entering second goroutine.")
-
-		ports := []string{constants.ClientProcessPort1, constants.ClientProcessPort2}
 		for batch := range availableBatch {
-			process(batch, &ports)
+			process(batch)
 		}
 		log.Info("Exiting second goroutine.!!!!!!")
 	}()
 
 }
 
-// sendCheckSum computes the desired MD5 checksum results and send it to the data source
-func sendCheckSum() {
-	log.Info("Send check sum method invoked")
-}
-
-func process(batch *BadTraceIdsBatch, ports *[]string) {
-	//log.Infof("process batchPos: %d", batch.batchPos)
+func process(batch *BadTraceIdsBatch) {
 	traceMap := make(map[string]*ds.StrSet)
-	for _, port := range *ports {
+	for _, port := range ports {
 		tempTraceMap, err := getTraceMapFromRemote(batch.badTraceIds, batch.batchPos, port)
 		if err != nil {
 			log.Errorf("getTraceMapFromRemote error: batchPos: %d, port: %d", batch.batchPos, port)
@@ -122,7 +115,7 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 			if spanSet, ok := traceMap[traceId]; ok {
 				spanSet.AddAll(*spanList)
 			} else {
-				spanSet = ds.NewStrSet()
+				spanSet = ds.NewStrSetWithCap(50)
 				spanSet.AddAll(*spanList)
 				traceMap[traceId] = spanSet
 			}
@@ -135,35 +128,9 @@ func process(batch *BadTraceIdsBatch, ports *[]string) {
 		checkSumMap[traceId] = md5Hash
 		csMu.Unlock()
 	}
-
-	//log.Infof("traceMap: %s", traceMap)
-	// update the checksum map
-	// following are tests
-	/*	mapToCheck := make(map[string]string)
-		for traceId, spans := range traceMap {
-
-			spanStr := spans.SortedStr() + "\n"
-			md5Hash := strings.ToUpper(utils.MD5(spanStr))
-			mapToCheck[traceId] = md5Hash
-		}
-
-		client := &http.Client{}
-		data := make(map[string]interface{})
-		data["map"] = mapToCheck
-		data["batchPos"] = batch.batchPos
-		bytesData, _ := json.Marshal(data)
-		req, _ := http.NewRequest("POST", "http://localhost:8003/verifymd5", bytes.NewReader(bytesData))
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Error("verify2 fail")
-		} else {
-			defer resp.Body.Close()
-		}*/
 }
 
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
-	//log.Infof("getTraceMapFromRemote, batchPos: %d, port: %d", batchPos, port)
 	client := &http.Client{}
 	data := make(map[string]interface{})
 	data["ids"] = badTraceIds
@@ -187,21 +154,6 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 		return nil, err
 	}
 
-	// following are verify code
-	/*	dataV := make(map[string]interface{})
-		dataV["batchPos"] = batchPos
-		dataV["map"] = respo.Map
-		bytesDataV, _ := json.Marshal(dataV)
-		reqV, _ := http.NewRequest("POST", "http://localhost:8003/verifygetTraceMapFromRemote", bytes.NewReader(bytesDataV))
-		reqV.Header.Set("Content-Type", "application/json")
-		respV, err := client.Do(reqV)
-		if err != nil {
-			log.Error("verify failure")
-		}
-		defer respV.Body.Close()*/
-	///////////////////////
-
-	//log.Infof("get back data %v", respo)
 	return respo.Map, nil
 }
 
@@ -223,18 +175,13 @@ func BumpProcessCount() {
 	finishProcessCount++
 }
 
-// StartCheckSumService starts the service computing the checksum.
-func StartCheckSumService() {
-	//TODO send the result to data source
-}
-
 // IsFinished checks if there is really no more work for us to do before we can send the md5 info to data source
 // 1. if we still have badTrace batch waiting for process, then it doesn't count as finish
 // 2. if we don't have all the finish signals from the client, then it doesn't count as finish
 func IsFinished() bool {
 	// check if all the batch in the badTraceIdsList has been processed
-	for _, v := range badTraceIdsList {
-		if v.batchPos != 0 {
+	for i := 0; i < batchSize; i++ {
+		if badTraceIdsList[i].batchPos != 0 {
 			return false
 		}
 	}

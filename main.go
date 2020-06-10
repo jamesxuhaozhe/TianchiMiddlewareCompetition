@@ -17,7 +17,7 @@ import (
 
 var (
 	port = pflag.StringP("port", "p", "8080", "server port")
-	mode = pflag.StringP("mode", "m", "debug", "server mode: debug or release")
+	mode = pflag.StringP("mode", "m", "release", "server mode: debug or release")
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	// SetServerPort the conf
 	conf.SetServerPort(*port)
 
-	// Init the logger
+	// Start the logger
 	log.InitLogger()
 
 	// Set gin mode.
@@ -40,11 +40,10 @@ func main() {
 
 	// client or backend process data structure init
 	if utils.IsBackendProcess() {
-		backend.Init()
-		backend.StartCheckSumService()
+		backend.Start()
 		// init checksum goroutine
 	} else if utils.IsClientProcess() {
-		client.Init()
+		client.Start()
 	}
 
 	// Ping the server to make sure the router is working
