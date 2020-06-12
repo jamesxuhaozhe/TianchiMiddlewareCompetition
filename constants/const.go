@@ -13,6 +13,7 @@ const (
 	// max amount of ping times during Bootstrap
 	PingCount = 5
 
+	// Data specific trait tells us that 20000 is a good choice
 	BatchSize = 20000
 
 	// Ideally when two clients both finish, the process count should be 2

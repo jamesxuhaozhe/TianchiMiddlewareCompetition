@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	// we initialize a ring buffer with 15 slots to hold trace spans
+	// we initialize a ring buffer with 50 slots to hold trace spans
 	batchCount = 50
 )
 

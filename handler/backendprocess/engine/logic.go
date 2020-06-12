@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	// we use 90 batches to cache the total bad trace id from two clients
+	// we use 65 batches to cache the total bad trace id from two clients
 	batchSize = 65
 )
 
@@ -26,7 +26,7 @@ var (
 	badTraceIdsList = make([]*BadTraceIdsBatch, 0, batchSize)
 	initDone        = make(chan struct{})
 
-	currentBatch   = 0
+	currentBatch = 0
 
 	csMu        = &sync.Mutex{}
 	checkSumMap = make(map[string]string, 10000)
@@ -139,12 +139,12 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 		return nil, errors.New("net work error")
 	}
 
-	var respo = response{}
-	if err := json.NewDecoder(resp.Body).Decode(&respo); err != nil {
+	var response = response{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}
 
-	return respo.Map, nil
+	return response.Map, nil
 }
 
 // SetBadTraceIds maps the incoming bad trace ids into a ring buffer.
