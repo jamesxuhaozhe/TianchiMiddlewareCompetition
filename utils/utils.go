@@ -23,11 +23,12 @@ func IsBackendProcess() bool {
 	return false
 }
 
-func MD5Bytes(s []byte) string {
+func MD5(s string) string {
+	return md5Bytes([]byte(s))
+}
+
+func md5Bytes(s []byte) string {
 	ret := md5.Sum(s)
 	return hex.EncodeToString(ret[:])
 }
 
-func MD5(s string) string {
-	return MD5Bytes([]byte(s))
-}
