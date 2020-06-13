@@ -31,4 +31,3 @@ func md5Bytes(s []byte) string {
 	ret := md5.Sum(s)
 	return hex.EncodeToString(ret[:])
 }
-
