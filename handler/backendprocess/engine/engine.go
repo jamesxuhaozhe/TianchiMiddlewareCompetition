@@ -44,6 +44,7 @@ type response struct {
 	Map map[string]*[]string `json:"map"`
 }
 
+// Start spins up the core backend processing logic
 func Start() {
 	go func() {
 		for i := 0; i < batchSize; i++ {
@@ -93,6 +94,7 @@ func Start() {
 	}()
 }
 
+// process takes in the given batch id sets and query two remote servers for spans we are interested in.
 func process(batch *BadTraceIdsBatch) {
 	traceMap := make(map[string]*ds.StrSet)
 	for _, port := range ports {
