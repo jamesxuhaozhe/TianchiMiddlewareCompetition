@@ -24,7 +24,7 @@ var (
 	initDone       = make(chan struct{}, 1)
 	start          time.Time
 	after          time.Time
-	lineChan       = make(chan string, 300)
+	lineChan       = make(chan *string, 300)
 )
 
 // Start populates the data structure we need for further processing.
@@ -53,17 +53,17 @@ func ProcessData() error {
 		traceBatchMap := batchTraceList[pos]
 		for line := range lineChan {
 			count++
-			cols := strings.Split(line, "|")
+			cols := strings.Split(*line, "|")
 			if cols != nil && len(cols) > 1 {
 				traceId := cols[0]
 				var spanList []string
 				existSpans, ok := traceBatchMap.Get(traceId)
 				if !ok {
 					spanList = make([]string, 0, 50)
-					spanList = append(spanList, line)
+					spanList = append(spanList, *line)
 					traceBatchMap.Put(traceId, &spanList)
 				} else {
-					*existSpans = append(*existSpans, line)
+					*existSpans = append(*existSpans, *line)
 				}
 				if len(cols) > 8 {
 					tag := cols[8]
@@ -112,7 +112,7 @@ func ProcessData() error {
 		//count++
 		line, err := buf.ReadString('\n')
 		line = strings.TrimRight(line, "\n")
-		lineChan <- line
+		lineChan <- &line
 
 		if err != nil {
 			if err == io.EOF {
@@ -210,9 +210,9 @@ func markFinish() bool {
 func getUrl() string {
 	svrPort := conf.GetServerPort()
 	if svrPort == constants.ClientProcessPort1 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace1.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace1.data"
 	} else if svrPort == constants.ClientProcessPort2 {
-		return "http://localhost:" + conf.GetDatasourcePort() + "/trace2.data"
+		return "http://localhost:" + conf.GetLocalTestPort() + "/trace2.data"
 	}
 	return ""
 }
