@@ -13,6 +13,7 @@ const (
 	// max amount of ping times during Bootstrap
 	PingCount = 5
 
+	// Any two spans under the same trace id won't differ by 20000 lines
 	BatchSize = 20000
 
 	// Ideally when two clients both finish, the process count should be 2
