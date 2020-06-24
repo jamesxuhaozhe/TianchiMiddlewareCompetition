@@ -210,9 +210,9 @@ func markFinish() bool {
 func getUrl() string {
 	svrPort := conf.GetServerPort()
 	if svrPort == constants.ClientProcessPort1 {
-		return "http://localhost:" + conf.GetLocalTestPort() + "/trace1.data"
+		return "http://localhost:" + conf.GetDatasourcePort() + "/trace1.data"
 	} else if svrPort == constants.ClientProcessPort2 {
-		return "http://localhost:" + conf.GetLocalTestPort() + "/trace2.data"
+		return "http://localhost:" + conf.GetDatasourcePort() + "/trace2.data"
 	}
 	return ""
 }

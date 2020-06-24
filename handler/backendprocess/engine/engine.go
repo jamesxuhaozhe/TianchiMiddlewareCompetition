@@ -153,11 +153,11 @@ func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map
 func SetBadTraceIds(badTraceIds []string, batchPos int) {
 	pos := batchPos % batchSize
 	batch := badTraceIdsList[pos]
-	if len(badTraceIds) > 0 {
-		batch.batchPos = batchPos
-		batch.processCount++
-		batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
-	}
+
+	batch.batchPos = batchPos
+	batch.processCount++
+	batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
+
 }
 
 // BumpProcessCount bumps up the finish process count by 1.
