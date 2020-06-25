@@ -83,6 +83,7 @@ func toInt64(span string) int64 {
 	return -1
 }
 
+// SortedStr returns sorted span by timestamp
 func (s *StrSet) SortedStr() string {
 	if len(s.set) == 0 {
 		return ""
