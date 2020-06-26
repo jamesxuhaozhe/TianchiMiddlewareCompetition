@@ -93,6 +93,7 @@ func (s *StrSet) SortedStr() string {
 	return strings.Join(spanSlice, "\n")
 }
 
+// GetStrSlice returns the string slice view of the set.
 func (s *StrSet) GetStrSlice() []string {
 	tempKeys := make([]string, 0, len(s.set))
 	for k := range s.set {
