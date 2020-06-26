@@ -7,6 +7,7 @@ import (
 	"github.com/jamesxuhaozhe/tianchimiddlewarecompetition/constants"
 )
 
+// IsClientProcess checks if the current process is client.
 func IsClientProcess() bool {
 	serverPort := conf.GetServerPort()
 	if serverPort == constants.ClientProcessPort1 || serverPort == constants.ClientProcessPort2 {
@@ -15,6 +16,7 @@ func IsClientProcess() bool {
 	return false
 }
 
+// IsBackendProcess checks if the current process is backend.
 func IsBackendProcess() bool {
 	serverPort := conf.GetServerPort()
 	if serverPort == constants.BackendProcessPort1 {
@@ -23,6 +25,7 @@ func IsBackendProcess() bool {
 	return false
 }
 
+// MD5 returns the md5 hash of the input string.
 func MD5(s string) string {
 	return md5Bytes([]byte(s))
 }
