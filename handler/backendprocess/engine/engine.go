@@ -16,7 +16,7 @@ import (
 
 const (
 	// we use 65 batches to cache the total bad trace id from two clients
-	batchSize = 65
+	batchSize = 15
 )
 
 var (
