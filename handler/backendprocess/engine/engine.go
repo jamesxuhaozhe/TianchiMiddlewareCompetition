@@ -157,7 +157,6 @@ func SetBadTraceIds(badTraceIds []string, batchPos int) {
 	batch.batchPos = batchPos
 	batch.processCount++
 	batch.badTraceIds = append(batch.badTraceIds, badTraceIds...)
-
 }
 
 // BumpProcessCount bumps up the finish process count by 1.
