@@ -122,6 +122,7 @@ func process(batch *BadTraceIdsBatch) {
 	}
 }
 
+// getTraceMapFromRemote queries the remote client for answers
 func getTraceMapFromRemote(badTraceIds []string, batchPos int, port string) (map[string]*[]string, error) {
 	client := &http.Client{}
 	data := make(map[string]interface{})
