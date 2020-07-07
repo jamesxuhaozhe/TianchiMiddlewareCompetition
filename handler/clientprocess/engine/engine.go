@@ -107,6 +107,7 @@ func ProcessData() error {
 	}
 	defer resp.Body.Close()
 
+	// TODO: consider increase the initial buf size to speed up
 	buf := bufio.NewReader(resp.Body)
 	for {
 		//count++
