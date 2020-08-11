@@ -1,4 +1,4 @@
-# TianchiMiddlewareCompetition
+# 首届云原生编程挑战赛
 
 # 比赛名称：
 
